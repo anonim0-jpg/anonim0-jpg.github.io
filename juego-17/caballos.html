@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inside Track | Horses</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;900&display=swap');
+
+        /* --- Configuración Dark Liquid Glass --- */
+        :root {
+            /* Superficies oscuras y translúcidas */
+            --glass-surface: rgba(0, 0, 0, 0.4); 
+            --glass-border: rgba(255, 255, 255, 0.1);
+            
+            /* Colores de neón para los corredores */
+            --neon-blue: #00f2ff;
+            --neon-purple: #bd00ff;
+            --neon-green: #0aff68;
+            --neon-red: #ff0055;
+            --neon-yellow: #f9c80e;
+
+            --text-main: #ffffff;
+            --text-muted: #aaaaaa;
+        }
+
+        * { box-sizing: border-box; user-select: none; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Poppins', sans-serif;
+            /* Fondo Oscuro Fluido Animado */
+            background: linear-gradient(-45deg, #000000, #1a0b2e, #0f2027, #203a43);
+            background-size: 400% 400%;
+            animation: gradientBG 20s ease infinite;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Glassmorphism Dark Panels --- */
+        .glass-panel {
+            background: var(--glass-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        header {
+            width: 100%; max-width: 800px; padding: 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 1.8rem; margin: 0;
+            font-weight: 900; letter-spacing: 1px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #fff, #aaa);
+            background-clip: text; -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .wallet { 
+            font-family: 'Poppins', sans-serif; font-weight: 600;
+            background: rgba(0,0,0,0.6); 
+            padding: 10px 20px; border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .money { color: var(--neon-green); font-weight: 800; text-shadow: 0 0 10px rgba(10, 255, 104, 0.3); }
+
+        /* --- Layout --- */
+        .container { width: 95%; max-width: 800px; padding-bottom: 40px; }
+
+        /* --- Betting Interface --- */
+        .roster {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+            gap: 15px; margin: 20px 0;
+        }
+
+        .horse-card {
+            padding: 20px; cursor: pointer; 
+            transition: transform 0.3s ease, background 0.3s;
+            border-radius: 20px;
+            border: 1px solid transparent;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            position: relative;
+            background: rgba(255,255,255,0.03);
+        }
+        
+        .horse-card:hover { 
+            background: rgba(255,255,255,0.08); 
+            transform: translateY(-5px); 
+        }
+        
+        .horse-card.selected {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255,255,255,0.3);
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+        }
+
+        /* Badge circular */
+        .card-number {
+            font-size: 1.4rem; font-weight: 700; 
+            width: 45px; height: 45px; line-height: 45px;
+            border-radius: 50%; 
+            background: rgba(0,0,0,0.3);
+            margin-bottom: 10px; 
+            color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .horse-name { font-weight: 600; font-size: 1rem; margin-bottom: 5px; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
+        .horse-odds { 
+            font-size: 2.2rem; font-weight: 800; color: var(--neon-yellow); 
+            line-height: 1; margin: 10px 0;
+            text-shadow: 0 0 15px rgba(249, 200, 14, 0.2);
+        }
+        .payout-hint { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase;}
+
+        /* --- Controls --- */
+        .controls-area {
+            display: flex; gap: 15px; justify-content: center; align-items: center;
+            margin-bottom: 30px;
+        }
+        input[type="number"] {
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); 
+            color: white; padding: 15px; border-radius: 12px; font-size: 1.2rem; 
+            width: 120px; text-align: center; font-family: 'Poppins', sans-serif; font-weight: bold;
+        }
+        input[type="number"]:focus { outline: none; border-color: var(--neon-blue); }
+
+        .btn-main {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border: none;
+            color: white; padding: 15px 40px; border-radius: 12px;
+            font-weight: 700; font-size: 1rem; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: all 0.3s;
+        }
+        .btn-main:hover { filter: brightness(1.2); transform: translateY(-2px); }
+        .btn-main:active { transform: scale(0.98); }
+        .btn-main:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); transform: none; }
+
+        /* --- Track --- */
+        .track {
+            position: relative; 
+            padding: 15px 0; 
+            background: rgba(0,0,0,0.2);
+        }
+        .finish-line {
+            position: absolute; right: 8%; top: 0; bottom: 0; width: 2px;
+            background: rgba(255,255,255,0.2);
+            border-right: 2px dashed rgba(255,255,255,0.2);
+            z-index: 1;
+        }
+        .lane {
+            height: 70px; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+            position: relative;
+            display: flex; align-items: center; 
+        }
+        
+        /* --- EL CORREDOR (Bloque de Neón Oscuro) --- */
+        .racer-box {
+            position: absolute; left: 0;
+            width: 50px; height: 50px;
+            
+            /* Estilo Cristal Oscuro */
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            
+            display: flex; justify-content: center; align-items: center;
+            font-weight: 800; font-size: 1.4rem; color: #fff;
+            
+            z-index: 5;
+            transition: left 0.1s linear; 
+            box-shadow: 0 0 15px currentColor; /* Glow del color del corredor */
+        }
+
+        /* Estela del corredor */
+        .racer-box::after {
+            content: ''; position: absolute;
+            top: 50%; left: -20px; width: 20px; height: 60%;
+            transform: translateY(-50%);
+            background: inherit; /* Color heredado para la estela */
+            opacity: 0;
+            filter: blur(10px);
+            transition: opacity 0.3s;
+            border-radius: 10px;
+        }
+
+        /* Animación de movimiento */
+        @keyframes vibration {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-1px, 1px); }
+            40% { transform: translate(1px, -1px); }
+            60% { transform: translate(-1px, -1px); }
+            80% { transform: translate(1px, 1px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .racing {
+            animation: vibration 0.2s infinite linear;
+        }
+        .racing::after { opacity: 0.5; }
+
+        /* --- Result Modal --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s; z-index: 100;
+        }
+        .modal.active { opacity: 1; pointer-events: auto; }
+        .modal-box { 
+            text-align: center; padding: 50px; 
+            background: rgba(10, 10, 15, 0.9); border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 60px rgba(0, 242, 255, 0.15); 
+            border-radius: 30px;
+            max-width: 90%;
+            color: #fff;
+        }
+
+        @media (max-width: 600px) {
+            .roster { grid-template-columns: 1fr 1fr; }
+            .horse-card { padding: 15px; }
+            .horse-odds { font-size: 1.8rem; }
+            h1 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Inside Track</h1>
+        <div class="wallet">SALDO: <span class="money" id="balance-display">$5000</span></div>
+    </header>
+
+    <div class="container">
+        
+        <div class="glass-panel" style="padding: 20px; margin-bottom: 20px;">
+            <div class="roster" id="roster"></div>
+            
+            <div id="msg-box" style="text-align:center; color: var(--neon-red); height: 20px; margin-bottom: 10px; font-weight: 600;"></div>
+
+            <div class="controls-area">
+                <input type="number" id="bet-input" value="500" step="100">
+                <button class="btn-main" id="start-btn" onclick="startRace()">JUGAR</button>
+            </div>
+        </div>
+
+        <div class="glass-panel track" id="track">
+            <div class="finish-line"></div>
+        </div>
+
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-box">
+            <h2 id="modal-title" style="font-size: 2.5rem; margin: 0; font-weight: 800;"></h2>
+            <p id="modal-msg" style="font-size: 1.2rem; margin: 20px 0; opacity: 0.9;"></p>
+            <h3 id="modal-amount" style="font-size: 2.5rem; margin: 0; font-weight: 300;"></h3>
+            <button class="btn-main" onclick="resetGame()" style="margin-top: 30px;">CONTINUAR</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA DE NOMBRES ---
+        // Lista original restaurada + extras del mismo estilo
+        const NAMES = [
+            "Heroína Pasada", "Santo Colocón", "Es una Trampa",
+            "Caballo de Crack", "Sopa de Gallo", "Coma Etílico", 
+            "Riñón Robado", "Ajuste de Cuentas", "Testigo Falso", 
+            "Mula de Carga", "Dinero Sucio", "Tétanos",
+            "Señor Agente", "Gatillo Fácil", "Hígado Graso",
+            "Orden de Alejamiento", "Material Robado", "Coartada Perfecta",
+            "Narco Submarino", "Polvo Blanco", 
+            "Testaferro", "Blanqueo", "Ruta de la Seda", "Chivato", "Fugitivo"
+        ];
+        
+        // Colores Neón (mucho mejor para fondo oscuro)
+        const COLORS = ["#00f2ff", "#bd00ff", "#0aff68", "#ff0055", "#f9c80e"];
+        
+        // --- STATE ---
+        let balance = 5000;
+        let selectedId = null;
+        let isRacing = false;
+        let horses = [];
+        let raceEntities = [];
+
+        // --- MATHS ---
+        function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+
+        function generateOdds(score) {
+            let risk = Math.max(1, 35 - score); 
+            let num = Math.round(risk * (0.5 + Math.random()));
+            let den = 1;
+            if (num <= 1) { num = 1; den = 1; }
+            else if (num > 30) { num = 30; } 
+            if (num % 2 === 0 && Math.random() > 0.5) { num /= 2; den = 2; }
+            const common = gcd(num, den);
+            return { n: num/common, d: den/common, str: (den/common===1 && num/common===1) ? "EVS" : `${num/common}/${den/common}` };
+        }
+
+        // --- CORE ---
+        function init() {
+            horses = [];
+            let pool = [...NAMES].sort(() => 0.5 - Math.random());
+            
+            for(let i=0; i<5; i++) {
+                let stats = {
+                    spd: Math.floor(Math.random() * 10) + 1,
+                    acc: Math.floor(Math.random() * 10) + 1,
+                    sta: Math.floor(Math.random() * 10) + 1
+                };
+                let score = stats.spd + stats.acc + stats.sta;
+                horses.push({
+                    id: i,
+                    number: i + 1, 
+                    name: pool[i],
+                    color: COLORS[i],
+                    stats: stats, 
+                    odds: generateOdds(score)
+                });
+            }
+            selectedId = null;
+            renderUI();
+            updateTrack();
+        }
+
+        function renderUI() {
+            const list = document.getElementById('roster');
+            list.innerHTML = '';
+            horses.forEach(h => {
+                const div = document.createElement('div');
+                div.className = `horse-card ${selectedId === h.id ? 'selected' : ''}`;
+                div.onclick = () => { if(!isRacing) { selectedId = h.id; renderUI(); document.getElementById('msg-box').innerText=''; }};
+                
+                // Efecto de borde brillante si está seleccionado
+                if(selectedId === h.id) div.style.borderColor = h.color;
+
+                div.innerHTML = `
+                    <div class="card-number" style="color:${h.color}; border-color:${h.color}; box-shadow: 0 0 10px ${h.color}40">${h.number}</div>
+                    <div class="horse-name">${h.name}</div>
+                    <div class="horse-odds">${h.odds.str}</div>
+                    <div class="payout-hint">PAGA x${(1 + h.odds.n/h.odds.d).toFixed(2)}</div>
+                `;
+                list.appendChild(div);
+            });
+            document.getElementById('balance-display').innerText = '$' + balance;
+        }
+
+        function updateTrack() {
+            const track = document.getElementById('track');
+            track.innerHTML = '<div class="finish-line"></div>';
+            
+            horses.forEach((h) => {
+                const lane = document.createElement('div');
+                lane.className = 'lane';
+                // El bloque usa el color para el borde y el glow
+                lane.innerHTML = `
+                    <div class="racer-box" id="racer-${h.id}" style="border-color:${h.color}; color:${h.color};">
+                        ${h.number}
+                    </div>
+                `;
+                track.appendChild(lane);
+            });
+        }
+
+        function startRace() {
+            if(selectedId === null) return msg("¡ELIGE UN CORREDOR!");
+            
+            let bet = parseInt(document.getElementById('bet-input').value);
+            if(isNaN(bet) || bet <= 0) return msg("APUESTA INVÁLIDA");
+            if(bet > balance) return msg("SALDO INSUFICIENTE");
+
+            balance -= bet;
+            isRacing = true;
+            msg("");
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('bet-input').disabled = true;
+            document.getElementById('balance-display').innerText = '$' + balance;
+
+            // ACTIVAR ANIMACIÓN
+            horses.forEach(h => {
+                const el = document.getElementById(`racer-${h.id}`);
+                el.classList.add('racing');
+                el.style.animationDelay = `-${Math.random()}s`; 
+            });
+
+            raceEntities = horses.map(h => ({
+                id: h.id,
+                obj: h,
+                pos: 0,
+                speedCurrent: 0,
+                speedMax: 0.3 + (h.stats.spd * 0.035), 
+                accel: 0.005 + (h.stats.acc * 0.002),
+                stamina: 100 + (h.stats.sta * 10),
+                finished: false
+            }));
+
+            requestAnimationFrame(loop);
+        }
+
+        function loop() {
+            let finishedCount = 0;
+            let winner = null;
+
+            raceEntities.forEach(e => {
+                if(e.finished) { finishedCount++; return; }
+
+                // --- FÍSICAS ---
+                e.stamina -= 0.5;
+                let chaos = (Math.random() - 0.48) * 0.06; 
+
+                if(e.stamina > 0) {
+                    if(e.speedCurrent < e.speedMax) e.speedCurrent += e.accel;
+                    e.pos += e.speedCurrent + chaos;
+                } else {
+                    e.speedCurrent *= 0.98;
+                    e.pos += e.speedCurrent;
+                }
+
+                // --- ACTUALIZAR POSICIÓN ---
+                const el = document.getElementById(`racer-${e.id}`);
+                el.style.left = Math.min(90, e.pos) + '%'; 
+
+                if(e.pos >= 90) {
+                    e.finished = true;
+                    el.classList.remove('racing'); 
+                    if(!winner && finishedCount === 0) winner = e;
+                }
+            });
+
+            if(winner) {
+                endGame(winner);
+            } else {
+                requestAnimationFrame(loop);
+            }
+        }
+
+        function endGame(w) {
+            isRacing = false;
+            let bet = parseInt(document.getElementById('bet-input').value);
+            let winAmount = 0;
+
+            const modal = document.getElementById('modal');
+            const mTitle = document.getElementById('modal-title');
+            const mMsg = document.getElementById('modal-msg');
+            const mAmnt = document.getElementById('modal-amount');
+
+            if(w.id === selectedId) {
+                let profit = Math.floor(bet * (w.obj.odds.n / w.obj.odds.d));
+                winAmount = bet + profit;
+                balance += winAmount;
+
+                mTitle.innerText = "¡VICTORIA!";
+                mTitle.style.color = "var(--neon-green)"; 
+                mMsg.innerHTML = `¡El <b>#${w.obj.number}</b> (<span style="color:${w.obj.color}">${w.obj.name}</span>) ganó!`;
+                mAmnt.innerText = `+ $${winAmount}`;
+                mAmnt.style.color = "var(--neon-green)";
+            } else {
+                mTitle.innerText = "DERROTA";
+                mTitle.style.color = "var(--neon-red)";
+                mMsg.innerHTML = `Ganó el <b>#${w.obj.number}</b> (<span style="color:${w.obj.color}">${w.obj.name}</span>).`;
+                mAmnt.innerText = `-$${bet}`;
+                mAmnt.style.color = "var(--neon-red)";
+            }
+
+            setTimeout(() => modal.classList.add('active'), 500);
+        }
+
+        function resetGame() {
+            document.getElementById('modal').classList.remove('active');
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('bet-input').disabled = false;
+            init(); 
+        }
+
+        function msg(t) { document.getElementById('msg-box').innerText = t; }
+
+        init();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simón Dice</title>
+    <link rel="stylesheet" href="Simon.css">
+</head>
+<body>
+    <h1>Simón Dice</h1>
+    <p id="level">Nivel: 1</p>
+    <div class="game-board">
+        <div class="color" id="red" onclick="playerMove('red')"></div>
+        <div class="color" id="green" onclick="playerMove('green')"></div>
+        <div class="color" id="blue" onclick="playerMove('blue')"></div>
+        <div class="color" id="yellow" onclick="playerMove('yellow')"></div>
+    </div>
+    <button onclick="startGame()">Empezar Juego</button>
+    <p id="message"></p>
+    <script src="Simon.js"></script>
+</body>
+</html>

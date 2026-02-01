@@ -1,0 +1,277 @@
+/* Reset básico para todos los navegadores */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Estilo del body */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+/* Cabecera */
+header {
+    background-color: #333;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+}
+
+header h1 {
+    margin-bottom: 10px;
+    font-size: 2.5rem;
+}
+
+nav ul {
+    list-style-type: none;
+}
+
+nav ul li {
+    display: inline;
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.2rem;
+}
+
+nav ul li a:hover {
+    text-decoration: underline;
+}
+
+/* Estilos para el contenido principal */
+main {
+    padding: 20px;
+}
+
+/* Secciones */
+section {
+    margin-bottom: 30px;
+}
+
+/* Títulos dentro de las secciones */
+h2 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+h3 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    color: #444;
+}
+
+/* Imágenes */
+img {
+    max-width: 100%;
+    height: auto;
+    margin: 20px 0;
+}
+
+/* Videos embebidos */
+iframe {
+    max-width: 100%;
+    margin: 20px 0;
+}
+
+/* Tablas */
+table {
+    width: 100%;
+    margin: 20px 0;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+table th {
+    background-color: #333;
+    color: white;
+}
+
+/* Enlaces */
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Estilos del pie de página */
+footer {
+    background-color: #333;
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+}
+
+/* Layout de dos columnas (cuando sea necesario) */
+.layout-2col {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+/* Estilo para el menú de navegación */
+nav ul {
+    text-align: center;
+}
+
+nav ul li {
+    display: inline-block;
+    margin: 0 15px;
+}
+
+/* Estilo para las listas */
+ul {
+    list-style-type: none;
+}
+
+ul li {
+    margin: 5px 0;
+}
+
+/* Formulario */
+form {
+    margin-top: 20px;
+}
+
+form input, form textarea, form button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+form button {
+    background-color: #333;
+    color: white;
+    cursor: pointer;
+}
+
+form button:hover {
+    background-color: #555;
+}
+
+/* Diseño para pantallas pequeñas */
+@media (max-width: 768px) {
+    .layout-2col {
+        flex-direction: column;
+    }
+
+    nav ul li {
+        display: block;
+        margin: 10px 0;
+    }
+}
+
+/* Estilo adicional para la página de juegos (Juegos de Azar) */
+.juegos img {
+    margin: 20px 0;
+    border-radius: 10px;
+}
+
+.juegos h3 {
+    color: #444;
+    margin-bottom: 15px;
+}
+
+.juegos p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.juegos .game-section {
+    margin-bottom: 40px;
+}
+
+.juegos .game-section img {
+    border: 3px solid #ddd;
+    border-radius: 8px;
+}
+
+.juegos .game-section h3 {
+    color: #222;
+    font-size: 1.8rem;
+}
+
+/* Estilos para los testimonios */
+.testimonios p {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-left: 5px solid #007bff;
+}
+
+.pdf-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+.estadisticas {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.fotos-estadisticas {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+/* Estilos de la página de recursos */
+.recursos ul {
+    margin-left: 20px;
+}
+
+.recursos ul li {
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+.recursos h2 {
+    margin-bottom: 20px;
+}
+
+.recursos iframe {
+    margin-top: 20px;
+}
+
+.recursos img {
+    max-width: 60%;
+    margin: 20px 0;
+}
+
+/* Estilos para el formulario */
+form input, form select, form textarea, form button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+form button {
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+form button:hover {
+    background-color: #0056b3;
+}

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Juego de Tetris</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #1c1c1c;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    canvas {
+      border: 3px solid #ffffff;
+      background-color: #1c1c1c;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    }
+
+    .score {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 24px;
+      color: #ffffff;
+      text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.7);
+    }
+
+    .game-over {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 36px;
+      color: #ffffff;
+      text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
+    }
+
+    .restart {
+      position: absolute;
+      top: 60%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 20px;
+      color: #ffffff;
+      cursor: pointer;
+      background-color: #333;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
+      display: none;
+    }
+
+    .restart:hover {
+      background-color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="score">Puntuación: 0</div>
+  <button class="restart" onclick="restartGame()">Reiniciar</button>
+  <canvas width="320" height="640" id="game"></canvas>
+
+  <!-- Agregar el elemento de audio para la música de fondo -->
+  <audio id="tetrisMusic" src="tetris-theme-korobeiniki-rearranged-arr-for-strings-185592.mp3" loop autoplay></audio>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const context = canvas.getContext('2d');
+    const grid = 32;
+    const tetrominoSequence = [];
+    const playfield = [];
+
+    // Crear campo de juego vacío
+    for (let row = -2; row < 20; row++) {
+      playfield[row] = [];
+      for (let col = 0; col < 10; col++) {
+        playfield[row][col] = 0;
+      }
+    }
+
+    // Configuración de los tetrominos
+    const tetrominos = {
+      'I': [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+      'J': [[1,0,0],[1,1,1],[0,0,0]],
+      'L': [[0,0,1],[1,1,1],[0,0,0]],
+      'O': [[1,1],[1,1]],
+      'S': [[0,1,1],[1,1,0],[0,0,0]],
+      'Z': [[1,1,0],[0,1,1],[0,0,0]],
+      'T': [[0,1,0],[1,1,1],[0,0,0]]
+    };
+
+    // Colores de cada tetromino
+    const colors = {
+      'I': '#00FFFF',
+      'O': '#FFD700',
+      'T': '#800080',
+      'S': '#32CD32',
+      'Z': '#FF6347',
+      'J': '#1E90FF',
+      'L': '#FF8C00'
+    };
+
+    let count = 0;
+    let tetromino = getNextTetromino();
+    let rAF = null;  // Animación del ciclo de juego
+    let gameOver = false;
+    let score = 0;
+
+    // Función para obtener un número aleatorio
+    function getRandomInt(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Generar una nueva secuencia de tetrominos
+    function generateSequence() {
+      const sequence = ['I', 'J', 'L', 'O', 'S', 'T', 'Z'];
+      while (sequence.length) {
+        const rand = getRandomInt(0, sequence.length - 1);
+        const name = sequence.splice(rand, 1)[0];
+        tetrominoSequence.push(name);
+      }
+    }
+
+    // Obtener el siguiente tetromino de la secuencia
+    function getNextTetromino() {
+      if (tetrominoSequence.length === 0) {
+        generateSequence();
+      }
+
+      const name = tetrominoSequence.pop();
+      const matrix = tetrominos[name];
+      const col = playfield[0].length / 2 - Math.ceil(matrix[0].length / 2);
+      const row = name === 'I' ? -1 : -2;
+
+      return {
+        name: name,
+        matrix: matrix,
+        row: row,
+        col: col
+      };
+    }
+
+    // Rotar la matriz NxN
+    function rotate(matrix) {
+      const N = matrix.length - 1;
+      return matrix.map((row, i) =>
+        row.map((val, j) => matrix[N - j][i])
+      );
+    }
+
+    // Verificar si la nueva matriz/posición es válida
+    function isValidMove(matrix, cellRow, cellCol) {
+      for (let row = 0; row < matrix.length; row++) {
+        for (let col = 0; col < matrix[row].length; col++) {
+          if (matrix[row][col] && (
+            cellCol + col < 0 || cellCol + col >= playfield[0].length ||
+            cellRow + row >= playfield.length ||
+            playfield[cellRow + row][cellCol + col]
+          )) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    // Colocar el tetromino en el campo de juego
+    function placeTetromino() {
+      for (let row = 0; row < tetromino.matrix.length; row++) {
+        for (let col = 0; col < tetromino.matrix[row].length; col++) {
+          if (tetromino.matrix[row][col]) {
+            if (tetromino.row + row < 0) {
+              return showGameOver();
+            }
+            playfield[tetromino.row + row][tetromino.col + col] = tetromino.name;
+          }
+        }
+      }
+
+      // Verificar líneas completas
+      for (let row = playfield.length - 1; row >= 0; ) {
+        if (playfield[row].every(cell => !!cell)) {
+          for (let r = row; r >= 0; r--) {
+            for (let c = 0; c < playfield[r].length; c++) {
+              playfield[r][c] = playfield[r - 1][c];
+            }
+          }
+          score += 100;
+          document.querySelector('.score').textContent = `Puntuación: ${score}`;
+        } else {
+          row--;
+        }
+      }
+
+      tetromino = getNextTetromino();
+    }
+
+    // Mostrar la pantalla de Game Over
+    function showGameOver() {
+      cancelAnimationFrame(rAF);
+      gameOver = true;
+      document.querySelector('.game-over').style.display = 'block';
+      document.querySelector('.restart').style.display = 'block';
+      document.getElementById('tetrisMusic').pause(); // Detener música en Game Over
+    }
+
+    // Reiniciar el juego
+    function restartGame() {
+      playfield.length = 0;
+      for (let row = -2; row < 20; row++) {
+        playfield[row] = [];
+        for (let col = 0; col < 10; col++) {
+          playfield[row][col] = 0;
+        }
+      }
+
+      score = 0;
+      document.querySelector('.score').textContent = `Puntuación: ${score}`;
+      gameOver = false;
+      document.querySelector('.game-over').style.display = 'none';
+      document.querySelector('.restart').style.display = 'none';
+      tetromino = getNextTetromino();
+      document.getElementById('tetrisMusic').play(); // Reanudar música en reinicio
+      rAF = requestAnimationFrame(loop);
+    }
+
+    // Bucle de juego
+    function loop() {
+      rAF = requestAnimationFrame(loop);
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Dibujar el campo de juego
+      for (let row = 0; row < 20; row++) {
+        for (let col = 0; col < 10; col++) {
+          if (playfield[row][col]) {
+            const name = playfield[row][col];
+            context.fillStyle = colors[name];
+            context.fillRect(col * grid, row * grid, grid - 2, grid - 2);
+            context.strokeStyle = 'white';
+            context.lineWidth = 1;
+            context.strokeRect(col * grid, row * grid, grid - 2, grid - 2);
+          }
+        }
+      }
+
+      // Dibujar el tetromino activo
+      if (tetromino) {
+        if (++count > 35) {
+          tetromino.row++;
+          count = 0;
+          if (!isValidMove(tetromino.matrix, tetromino.row, tetromino.col)) {
+            tetromino.row--;
+            placeTetromino();
+          }
+        }
+
+        context.fillStyle = colors[tetromino.name];
+        for (let row = 0; row < tetromino.matrix.length; row++) {
+          for (let col = 0; col < tetromino.matrix[row].length; col++) {
+            if (tetromino.matrix[row][col]) {
+              context.fillRect((tetromino.col + col) * grid, (tetromino.row + row) * grid, grid - 2, grid - 2);
+              context.strokeStyle = 'white';
+              context.lineWidth = 1;
+              context.strokeRect((tetromino.col + col) * grid, (tetromino.row + row) * grid, grid - 2, grid - 2);
+            }
+          }
+        }
+      }
+    }
+
+    // Escuchar los eventos del teclado
+    document.addEventListener('keydown', function(e) {
+      if (gameOver) return;
+
+      if (e.which === 37 || e.which === 39) {
+        const col = e.which === 37 ? tetromino.col - 1 : tetromino.col + 1;
+        if (isValidMove(tetromino.matrix, tetromino.row, col)) {
+          tetromino.col = col;
+        }
+      }
+
+      if (e.which === 38) {
+        const matrix = rotate(tetromino.matrix);
+        if (isValidMove(matrix, tetromino.row, tetromino.col)) {
+          tetromino.matrix = matrix;
+        }
+      }
+
+      if (e.which === 40) {
+        const row = tetromino.row + 1;
+        if (!isValidMove(tetromino.matrix, row, tetromino.col)) {
+          tetromino.row = row - 1;
+          placeTetromino();
+          return;
+        }
+        tetromino.row = row;
+      }
+    });
+
+    // Iniciar el juego
+    rAF = requestAnimationFrame(loop);
+  </script>
+
+  <div class="game-over" style="display:none;">¡GAME OVER!</div>
+</body>
+</html>

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Texas Hold'em Poker</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap');
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --glass-blur: blur(35px);
+            --accent-cyan: #00e5ff;
+            --accent-gold: #ffd700;
+            --text-main: #ffffff;
+            
+            /* TAMAÑO DE CARTAS GRANDE */
+            --card-w: 100px;  
+            --card-h: 140px;
+            --table-w: 940px;
+            --table-h: 520px;
+        }
+
+        body {
+            margin: 0; height: 100vh; overflow: hidden;
+            font-family: 'Ubuntu', sans-serif; color: var(--text-main);
+            background: linear-gradient(-45deg, #050a10, #0d2b38, #163645, #0a061a);
+            background-size: 400% 400%; animation: aurora 25s ease infinite;
+            user-select: none; display: flex;
+        }
+
+        @keyframes aurora { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .layout { display: flex; width: 100%; height: 100%; }
+
+        /* PANELES */
+        .glass-panel {
+            width: 300px;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            display: flex; flex-direction: column; padding: 20px;
+            z-index: 50; overflow-y: auto; overflow-x: hidden;
+            scrollbar-width: none; -ms-overflow-style: none;
+        }
+        .glass-panel::-webkit-scrollbar { display: none; }
+        .glass-panel.right { border-right: none; border-left: 1px solid var(--glass-border); }
+        .panel-title { font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 15px; text-align: center; }
+
+        .game-arena {
+            flex: 1; position: relative; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; perspective: 1000px;
+        }
+
+        /* MESA */
+        .poker-table {
+            position: relative;
+            width: var(--table-w); height: var(--table-h);
+            background: radial-gradient(circle at center, #2e7d58 0%, #164f3d 60%, #0a211a 100%);
+            border-radius: 400px;
+            box-shadow: inset 0 0 120px rgba(0,0,0,0.8), 0 0 0 12px #2a1d1a, 0 40px 100px rgba(0,0,0,0.6);
+            display: flex; justify-content: center; align-items: center;
+            transition: all 0.5s ease;
+        }
+
+        .table-branding {
+            position: absolute; font-family: serif; font-size: 6rem; 
+            color: rgba(255,255,255,0.05); letter-spacing: 15px; pointer-events: none;
+        }
+
+        .pot-capsule {
+            position: absolute; top: 32%;
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            padding: 8px 30px; border-radius: 50px;
+            color: var(--accent-gold); font-weight: 700; font-size: 1.2rem;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.15); z-index: 5;
+        }
+        
+        .comm-cards {
+            position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%);
+            display: flex; gap: 10px; z-index: 5;
+        }
+
+        .seat { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 20; width: 220px; }
+        #seat-cpu { top: -120px; } 
+        #seat-p1 { bottom: -120px; }
+
+        .player-hud {
+            background: rgba(10, 15, 20, 0.8); border: 1px solid rgba(255,255,255,0.15);
+            padding: 8px 15px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: space-between;
+            width: 140px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative; transition: 0.3s;
+        }
+        .seat.turn-active .player-hud { border-color: var(--accent-cyan); box-shadow: 0 0 25px rgba(0, 229, 255, 0.4); }
+        
+        .p-avatar { font-size: 0.8rem; font-weight: 700; color: #888; }
+        .p-cash { color: var(--accent-cyan); font-weight: bold; font-size: 1.1rem; }
+        
+        .dealer-btn {
+            width: 24px; height: 24px; background: #fff; color: #000;
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-weight: 900; font-size: 12px; border: 2px solid #ccc;
+            position: absolute; top: -10px; right: -10px;
+        }
+
+        .bubble {
+            position: absolute; background: #fff; color: #000;
+            padding: 5px 12px; border-radius: 8px; font-weight: 700; font-size: 0.85rem;
+            opacity: 0; transform: translateY(10px); transition: 0.3s; pointer-events: none; z-index: 60;
+        }
+        .bubble.show { opacity: 1; transform: translateY(0); }
+        #seat-cpu .bubble { top: 60px; right: -80px; border-radius: 0 12px 12px 12px; }
+        #seat-p1 .bubble { top: -50px; right: -80px; border-radius: 12px 12px 12px 0; }
+
+        /* --- CARTAS --- */
+        .hand-wrapper { display: flex; gap: 8px; justify-content: center; margin: 15px 0; perspective: 600px; }
+        
+        .card {
+            width: var(--card-w); height: var(--card-h);
+            background: #fdfdfd; border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            position: relative; font-family: 'Times New Roman', serif;
+            overflow: hidden; transition: transform 0.3s;
+        }
+        .card.red { color: #d0021b; }
+        .card.black { color: #111; }
+        
+        /* ESQUINA */
+        .corner {
+            position: absolute; top: 4px; left: 4px;
+            display: flex; flex-direction: column; align-items: center;
+            line-height: 1; font-weight: bold; 
+            font-size: calc(var(--card-w) * 0.28);
+            z-index: 2; 
+        }
+        .corner.btm { top: auto; bottom: 4px; left: auto; right: 4px; transform: rotate(180deg); }
+        
+        /* FIX ESPECIAL PARA EL 10 EN LA ESQUINA */
+        .card.is-ten .corner {
+            font-size: calc(var(--card-w) * 0.22);
+            letter-spacing: -1px; 
+        }
+        .card.is-ten .corner span:first-child { margin-bottom: 0px; }
+
+        /* FIGURAS CENTRALES */
+        .pips-container {
+            position: absolute; top: 22%; bottom: 22%; left: 28%; right: 28%;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .pip-row { display: flex; justify-content: space-between; height: 100%; align-items: center; }
+        .pip-row.center { justify-content: center; }
+        .pip-symbol { 
+            font-size: calc(var(--card-w) * 0.30); 
+            line-height: 1; display: flex; align-items: center; justify-content: center;
+        }
+        /* Para cartas densas reducimos el tamaño de la figura central */
+        .card.dense .pip-symbol { font-size: calc(var(--card-w) * 0.22); line-height: 0.9; }
+        
+        .face-art { 
+            position: absolute; inset: 15%; 
+            border: 1px solid currentColor; display: flex; justify-content: center; align-items: center; 
+            font-size: calc(var(--card-w) * 0.6); opacity: 0.15; 
+        }
+        .big-ace {
+             position: absolute; inset: 0; display: flex; justify-content: center; align-items: center;
+             font-size: calc(var(--card-w) * 0.8);
+        }
+
+        .card.back {
+            background: repeating-linear-gradient(45deg, #8b0000, #8b0000 5px, #a50000 5px, #a50000 10px);
+            border: 3px solid #fff;
+        }
+        .card.back * { display: none; }
+        .card.ghost { border: 2px dashed rgba(255,255,255,0.1); background: transparent; box-shadow: none; }
+
+        /* CHULETA */
+        .cheat-sheet { flex: 1; overflow-y: scroll; scrollbar-width: none; -ms-overflow-style: none; }
+        .cheat-sheet::-webkit-scrollbar { display: none; }
+
+        .cs-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .cs-name { font-size: 0.85rem; color: #ddd; font-weight: 500; }
+        .cs-hand { display: flex; gap: 4px; }
+        .cs-card {
+            width: 22px; height: 32px;
+            background: #eee; border-radius: 3px;
+            color: #111; font-size: 13px;
+            display: flex; justify-content: center; align-items: center;
+            font-family: serif; font-weight: bold; letter-spacing: -1px;
+        }
+        .cs-card.r { color: #d0021b; }
+        .cs-card.b { color: #000; }
+
+        /* CONTROLES */
+        .dock-bar {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(20, 25, 30, 0.85); backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 20px; border-radius: 20px;
+            display: flex; gap: 10px; align-items: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 100;
+        }
+        
+        .btn-glossy {
+            border: none; padding: 10px 20px; border-radius: 8px;
+            font-weight: 700; color: white; cursor: pointer;
+            font-family: 'Ubuntu', sans-serif; font-size: 0.9rem;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: 0.1s;
+        }
+        .btn-glossy:active { transform: translateY(2px); box-shadow: none; }
+        .btn-glossy:disabled { background: #444; color: #888; cursor: not-allowed; opacity: 0.6; }
+
+        .btn-fold { background: #d63c4a; }
+        .btn-check { background: #4facfe; color:#003; }
+        .btn-raise { background: #ffbf00; color:#443300; }
+        .btn-allin { background: #e01b84; }
+        .btn-next { background: #56ab2f; width: 100%; display: none; font-size: 1.1rem; }
+
+        .slider-group { display: flex; align-items: center; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 8px; margin-right: 10px; }
+        input[type=range] { width: 100px; accent-color: var(--accent-gold); cursor: pointer; }
+
+        /* NOTIFICACIONES */
+        .toast {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            background: #fff; color: #000; padding: 20px 40px; border-radius: 15px;
+            font-size: 2rem; font-weight: 900; opacity: 0; pointer-events: none;
+            transition: 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); z-index: 200; box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            text-align: center;
+        }
+        .toast.active { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .toast.bust { background: #d63c4a; color: #fff; border: 2px solid #fff; }
+        .list-item { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; display: flex; justify-content: space-between; }
+        .win { color: #4ade80; } .lose { color: #f87171; } .bonus { color: #ffd700; font-weight: bold; }
+
+        /* MÓVIL RESPONSIVE */
+        .mob-menu-btn, .mob-overlay { display: none; }
+
+        @media (max-width: 900px) {
+            :root {
+                /* AUMENTO TAMAÑO MÓVIL */
+                --card-w: 60px; 
+                --card-h: 84px;
+                --table-w: 95vw; --table-h: 40vh;
+            }
+            .glass-panel { display: none; }
+            .mob-menu-btn { display: block; position: fixed; top: 15px; left: 15px; z-index: 200; background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 8px 12px; border-radius: 6px; backdrop-filter: blur(5px); }
+            
+            .mob-overlay {
+                position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 150;
+                padding: 60px 20px; overflow-y: auto;
+            }
+            .mob-overlay.visible { display: block; }
+            .mob-close { position: absolute; top: 15px; right: 15px; font-size: 2rem; background: none; border: none; color: #fff; }
+
+            .poker-table { margin-top: 20px; border-radius: 100px; }
+            .table-branding { display: none; }
+            
+            #seat-cpu { top: -85px; width: 100%; }
+            #seat-p1 { bottom: -35px; width: 100%; }
+            .player-hud { width: auto; padding: 4px 12px; min-width: 110px; }
+            .comm-cards { gap: 4px; }
+            
+            #seat-cpu .bubble { top: 0; right: auto; left: 60%; }
+            #seat-p1 .bubble { top: auto; bottom: 80px; right: 20%; }
+
+            /* FIX: EMPUJAR LA MESA HACIA ARRIBA */
+            .game-arena {
+                justify-content: flex-start; /* No centrar, usar padding */
+                padding-top: 40px;
+                padding-bottom: 160px; /* Margen para botones */
+            }
+
+            .dock-bar {
+                width: 100%; bottom: 0; left: 0; right: 0; transform: none;
+                border-radius: 0; border-top: 1px solid #333; background: #121212;
+                display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+                padding: 10px; box-sizing: border-box;
+            }
+            .btn-glossy { font-size: 0.75rem; padding: 12px 2px; }
+            .slider-group { grid-column: 1 / -1; width: 100%; justify-content: space-between; margin-bottom: 5px; box-sizing: border-box; }
+            .btn-next { grid-column: 1 / -1; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <button class="mob-menu-btn" onclick="UI.toggleMob()">☰ Info</button>
+    
+    <div class="mob-overlay" id="mob-panel">
+        <button class="mob-close" onclick="UI.toggleMob()">×</button>
+        <div class="panel-title">Historial</div>
+        <div id="mob-log" style="margin-bottom: 30px;"></div>
+        <div class="panel-title">Ranking (Chuleta)</div>
+        <div id="mob-cheat" class="cheat-sheet"></div>
+    </div>
+
+    <div class="layout">
+        <div class="glass-panel">
+            <div class="panel-title">Registro</div>
+            <div id="log-feed" style="flex:1; overflow-y:auto; scrollbar-width:none;"></div>
+        </div>
+
+        <div class="game-arena">
+            <div class="poker-table">
+                <div class="table-branding">POKER</div>
+                <div class="pot-capsule">BOTE: $<span id="pot-display">0</span></div>
+                <div class="toast" id="game-toast">¡VICTORIA!</div>
+
+                <div class="seat" id="seat-cpu">
+                    <div class="player-hud">
+                        <div>
+                            <div class="p-avatar">CPU</div>
+                            <div class="p-cash">$<span id="stack-cpu">1000</span></div>
+                        </div>
+                        <div class="dealer-btn" id="dlr-cpu" style="display:none">D</div>
+                    </div>
+                    <div class="hand-wrapper" id="hand-cpu"></div>
+                    <div class="bubble" id="bub-cpu">...</div>
+                </div>
+
+                <div class="comm-cards" id="board"></div>
+
+                <div class="seat" id="seat-p1">
+                    <div class="bubble" id="bub-p1"></div>
+                    <div class="hand-wrapper" id="hand-p1"></div>
+                    <div class="player-hud">
+                        <div class="dealer-btn" id="dlr-p1">D</div>
+                        <div>
+                            <div class="p-avatar" style="color:var(--accent-cyan)">TÚ</div>
+                            <div class="p-cash">$<span id="stack-p1">1000</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dock-bar">
+                <button id="btn-next" class="btn-glossy btn-next" onclick="Engine.init()">Siguiente Mano ➜</button>
+                <div id="act-controls" style="display:contents">
+                    <div class="slider-group">
+                        <span style="font-size:0.7rem; color:#aaa; margin-right:5px">BET:</span>
+                        <input type="range" id="bet-range" oninput="UI.updateSlider(this.value)">
+                        <span id="bet-val" style="font-family:monospace; font-weight:bold; color:var(--accent-gold); width:40px; text-align:right">0</span>
+                    </div>
+                    <button id="btn-fold" class="btn-glossy btn-fold" onclick="Engine.playerAct('fold')">Retirarse</button>
+                    <button id="btn-check" class="btn-glossy btn-check" onclick="Engine.playerAct('check')">Pasar</button>
+                    <button id="btn-raise" class="btn-glossy btn-raise" onclick="Engine.playerAct('raise')">Subir</button>
+                    <button id="btn-allin" class="btn-glossy btn-allin" onclick="Engine.playerAct('allin')">ALL IN</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel right">
+            <div class="panel-title">Ranking Manos</div>
+            <div class="cheat-sheet" id="desk-cheat"></div>
+        </div>
+    </div>
+
+    <script>
+        /* --- CHULETA --- */
+        const CheatSheetData = [
+            {name: "Esc. Real", cards: ["A♥","K♥","Q♥","J♥","10♥"]},
+            {name: "Esc. Color", cards: ["9♠","8♠","7♠","6♠","5♠"]},
+            {name: "Póker", cards: ["K♦","K♠","K♥","K♣","2♦"]},
+            {name: "Full House", cards: ["A♣","A♦","A♠","Q♥","Q♦"]},
+            {name: "Color", cards: ["J♦","9♦","7♦","4♦","2♦"]},
+            {name: "Escalera", cards: ["10♠","9♦","8♥","7♣","6♦"]},
+            {name: "Trío", cards: ["Q♠","Q♥","Q♦","7♣","2♠"]},
+            {name: "Doble Par", cards: ["J♠","J♥","5♦","5♣","A♠"]},
+            {name: "Pareja", cards: ["10♠","10♥","K♦","7♣","2♠"]},
+            {name: "Carta Alta", cards: ["A♠","J♦","9♥","5♣","2♦"]}
+        ];
+
+        const RenderCheatSheet = () => {
+            const html = CheatSheetData.map(row => {
+                let cardsHTML = row.cards.map(c => {
+                    const suit = c.slice(-1);
+                    const val = c.slice(0, -1);
+                    const colorClass = (suit === '♥' || suit === '♦') ? 'r' : 'b';
+                    return `<div class="cs-card ${colorClass}">${val}${suit}</div>`;
+                }).join('');
+                return `<div class="cs-row"><div class="cs-name">${row.name}</div><div class="cs-hand">${cardsHTML}</div></div>`;
+            }).join('');
+            document.getElementById('desk-cheat').innerHTML = html;
+            document.getElementById('mob-cheat').innerHTML = html;
+        }
+
+        /* --- UI HELPERS --- */
+        const CardBuilder = {
+            create: (card, faceDown = false) => {
+                if(faceDown) return `<div class="card back"></div>`;
+                const color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
+                const v = card.val;
+                const denseClass = (v >= 7 && v <= 10) ? 'dense' : '';
+                // DETECCIÓN DE 10
+                const tenClass = (v === 10) ? 'is-ten' : '';
+
+                let innerHTML = '';
+                if(v >= 11 && v <= 13) innerHTML = `<div class="face-art">${card.label}</div>`;
+                else if (v === 14) innerHTML = `<div class="big-ace">${card.suit}</div>`;
+                else {
+                    innerHTML = `<div class="pips-container">`;
+                    const s = `<div class="pip-symbol">${card.suit}</div>`;
+                    const row = (count, center=false) => {
+                        let h = `<div class="pip-row ${center?'center':''}">`;
+                        for(let i=0; i<count; i++) h+=s; h+=`</div>`; return h;
+                    };
+                    if(v===2) innerHTML += row(1,true) + `<div style="flex:1"></div>` + row(1,true);
+                    if(v===3) innerHTML += row(1,true) + row(1,true) + row(1,true);
+                    if(v===4) innerHTML += row(2) + `<div style="flex:1"></div>` + row(2);
+                    if(v===5) innerHTML += row(2) + row(1,true) + row(2);
+                    if(v===6) innerHTML += row(2) + row(2) + row(2);
+                    if(v===7) innerHTML += row(2) + row(1,true) + row(2) + row(2);
+                    if(v===8) innerHTML += row(2) + row(2) + row(2) + row(2);
+                    if(v===9) innerHTML += row(2) + row(2) + row(1,true) + row(2) + row(2);
+                    // FIX: 10 AHORA TIENE 10 FIGURAS (5 filas de 2)
+                    if(v===10) innerHTML += row(2) + row(2) + row(2) + row(2) + row(2);
+                    innerHTML += `</div>`;
+                }
+                return `<div class="card ${color} ${denseClass} ${tenClass}"><div class="corner"><span>${card.label}</span><span>${card.suit}</span></div><div class="corner btm"><span>${card.label}</span><span>${card.suit}</span></div>${innerHTML}</div>`;
+            }
+        };
+
+        const PokerEvaluator = {
+            evaluate: (cards) => {
+                const sorted = [...cards].sort((a,b) => b.val - a.val);
+                const counts = {}, suits = {};
+                sorted.forEach(c => { counts[c.val] = (counts[c.val] || 0) + 1; suits[c.suit] = (suits[c.suit] || 0) + 1; });
+                let flushSuit = Object.keys(suits).find(s => suits[s] >= 5);
+                const isFlush = !!flushSuit;
+                let flushCards = isFlush ? sorted.filter(c => c.suit === flushSuit) : [];
+                const getStraight = (cardSet) => {
+                    const uniqueVals = [...new Set(cardSet.map(c => c.val))];
+                    for(let i=0; i <= uniqueVals.length - 5; i++) if(uniqueVals[i] - uniqueVals[i+4] === 4) return uniqueVals[i];
+                    const hasWheel = [14, 5, 4, 3, 2].every(v => uniqueVals.includes(v));
+                    return hasWheel ? 5 : 0;
+                };
+                const straightHigh = getStraight(sorted);
+                let straightFlushHigh = isFlush ? getStraight(flushCards) : 0;
+                if(straightFlushHigh === 14) return { rank: 10, name: "Escalera Real", kickers: [] };
+                if(straightFlushHigh > 0) return { rank: 9, name: "Esc. de Color", kickers: [straightFlushHigh] };
+                const groups = Object.entries(counts).map(([val, count]) => ({val: parseInt(val), count}));
+                groups.sort((a, b) => b.count - a.count || b.val - a.val);
+                if(groups[0].count === 4) return { rank: 8, name: "Póker", kickers: [groups[0].val, groups[1].val] };
+                if(groups[0].count === 3 && groups[1].count >= 2) return { rank: 7, name: "Full House", kickers: [groups[0].val, groups[1].val] };
+                if(isFlush) return { rank: 6, name: "Color", kickers: flushCards.slice(0,5).map(c=>c.val) };
+                if(straightHigh > 0) return { rank: 5, name: "Escalera", kickers: [straightHigh] };
+                if(groups[0].count === 3) return { rank: 4, name: "Trío", kickers: groups.map(g=>g.val).slice(0,3) };
+                if(groups[0].count === 2 && groups[1].count === 2) return { rank: 3, name: "Doble Pareja", kickers: [groups[0].val, groups[1].val, groups[2].val] };
+                if(groups[0].count === 2) return { rank: 2, name: "Pareja", kickers: groups.map(g=>g.val).slice(0,4) };
+                return { rank: 1, name: "Carta Alta", kickers: sorted.slice(0,5).map(c=>c.val) };
+            },
+            compare: (h1, h2) => {
+                if(h1.rank > h2.rank) return 1; if(h2.rank > h1.rank) return -1;
+                for(let i=0; i<Math.min(h1.kickers.length, h2.kickers.length); i++) {
+                    if(h1.kickers[i] > h2.kickers[i]) return 1; if(h2.kickers[i] > h1.kickers[i]) return -1;
+                }
+                return 0;
+            }
+        };
+
+        const UI = {
+            $: id => document.getElementById(id),
+            updateBoard: (cards) => {
+                const el = UI.$('board'); el.innerHTML = '';
+                cards.forEach(c => { const d = document.createElement('div'); d.innerHTML = CardBuilder.create(c); el.appendChild(d.firstChild); });
+                for(let i=cards.length; i<5; i++) el.innerHTML += `<div class="card ghost"></div>`;
+            },
+            updateHands: (pHand, cHand, showCpu) => {
+                const ph = UI.$('hand-p1'); ph.innerHTML = '';
+                pHand.forEach(c => { const d = document.createElement('div'); d.innerHTML = CardBuilder.create(c); ph.appendChild(d.firstChild); });
+                const ch = UI.$('hand-cpu'); ch.innerHTML = '';
+                cHand.forEach(c => { const d = document.createElement('div'); d.innerHTML = CardBuilder.create(c, !showCpu); ch.appendChild(d.firstChild); });
+            },
+            log: (txt, type) => {
+                const c = type==='win'?'win':(type==='lose'?'lose':(type==='bonus'?'bonus':''));
+                const div = document.createElement('div'); div.className = 'list-item'; div.innerHTML = `<span class="${c}">${txt}</span>`;
+                const feed = UI.$('log-feed'); feed.insertBefore(div, feed.firstChild);
+                UI.$('mob-log').innerHTML = feed.innerHTML;
+            },
+            toast: (msg, isBust = false) => { 
+                const t = UI.$('game-toast'); t.innerText = msg; 
+                t.className = 'toast active'; if(isBust) t.classList.add('bust');
+                setTimeout(() => t.className = 'toast', 2500); 
+            },
+            bubble: (who, msg) => { 
+                const b = UI.$(`bub-${who}`); b.innerText = msg; b.classList.add('show'); 
+                setTimeout(() => b.classList.remove('show'), 2000); 
+            },
+            updateSlider: (val) => UI.$('bet-val').innerText = val,
+            toggleMob: () => document.getElementById('mob-panel').classList.toggle('visible'),
+            
+            refresh: () => {
+                UI.$('pot-display').innerText = Engine.pot;
+                UI.$('stack-p1').innerText = Engine.p1.stack;
+                UI.$('stack-cpu').innerText = Engine.cpu.stack;
+                UI.$('dlr-p1').style.display = Engine.dealerP1 ? 'flex' : 'none';
+                UI.$('dlr-cpu').style.display = !Engine.dealerP1 ? 'flex' : 'none';
+                
+                const controls = ['btn-fold','btn-check','btn-raise','btn-allin'];
+                
+                if(Engine.turnP1 && Engine.active) {
+                    UI.$('seat-p1').classList.add('turn-active'); UI.$('seat-cpu').classList.remove('turn-active');
+                    const toCall = Engine.currBet - Engine.p1.bet;
+                    UI.$('btn-check').innerText = toCall === 0 ? 'PASAR' : `IGUALAR $${toCall}`;
+                    
+                    const minRaise = toCall + Engine.bb;
+                    const maxRaise = Engine.p1.stack;
+                    const s = UI.$('bet-range'); 
+                    
+                    if(Engine.p1.stack <= toCall) {
+                        s.disabled = true; UI.$('btn-raise').disabled = true;
+                    } else {
+                        s.disabled = false; s.min = minRaise; s.max = maxRaise; s.value = minRaise; 
+                        UI.updateSlider(minRaise); UI.$('btn-raise').disabled = false;
+                    }
+                    controls.forEach(id=>UI.$(id).disabled=false);
+                } else {
+                    UI.$('seat-p1').classList.remove('turn-active'); 
+                    if(Engine.active) UI.$('seat-cpu').classList.add('turn-active');
+                    controls.forEach(id=>UI.$(id).disabled=true);
+                }
+            }
+        };
+
+        const Engine = {
+            deck: [], comm: [], p1: {}, cpu: {}, pot: 0, stage: 0, currBet: 0, 
+            dealerP1: true, turnP1: false, active: false, sb: 10, bb: 20,
+            actionsOnStreet: 0,
+
+            init: () => {
+                RenderCheatSheet();
+                Engine.active = true;
+                UI.$('btn-next').style.display = 'none';
+                UI.$('act-controls').style.display = 'contents';
+                
+                Engine.deck = [];
+                const s = ['♠','♥','♣','♦'], v = [2,3,4,5,6,7,8,9,10,11,12,13,14];
+                const l = {11:'J',12:'Q',13:'K',14:'A'};
+                for(let ss of s) for(let vv of v) Engine.deck.push({suit:ss, val:vv, label:l[vv]||vv});
+                for (let i = Engine.deck.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [Engine.deck[i], Engine.deck[j]] = [Engine.deck[j], Engine.deck[i]];
+                }
+
+                const checkStack = (s) => s <= 0 ? 500 : s;
+                Engine.p1 = { stack: Engine.p1.stack ? checkStack(Engine.p1.stack) : 1000, hand: [Engine.deck.pop(), Engine.deck.pop()], bet:0, folded:false };
+                Engine.cpu = { stack: Engine.cpu.stack ? checkStack(Engine.cpu.stack) : 1000, hand: [Engine.deck.pop(), Engine.deck.pop()], bet:0, folded:false };
+
+                Engine.comm = []; Engine.pot = 0; Engine.stage = 0; Engine.actionsOnStreet = 0;
+                UI.updateHands(Engine.p1.hand, Engine.cpu.hand, false);
+                UI.updateBoard([]);
+                Engine.postBlinds();
+            },
+
+            postBlinds: () => {
+                const sbAmt = Math.min(Engine.sb, Engine.p1.stack, Engine.cpu.stack);
+                const bbAmt = Math.min(Engine.bb, Engine.p1.stack, Engine.cpu.stack);
+                
+                if(Engine.dealerP1) { 
+                    Engine.placeBet('p1', sbAmt); Engine.placeBet('cpu', bbAmt); 
+                    Engine.turnP1 = true; UI.toast("Tu Turno"); 
+                } else { 
+                    Engine.placeBet('cpu', sbAmt); Engine.placeBet('p1', bbAmt); 
+                    Engine.turnP1 = false; UI.toast("Turno CPU"); 
+                }
+                Engine.currBet = bbAmt;
+                Engine.actionsOnStreet = 0;
+                UI.refresh();
+                if(!Engine.turnP1) setTimeout(Engine.cpuAI, 1000);
+            },
+
+            placeBet: (who, amt) => {
+                const p = Engine[who];
+                const realAmt = Math.min(amt, p.stack + p.bet);
+                const added = realAmt - p.bet;
+                if(added > 0) {
+                    p.stack -= added; p.bet += added; Engine.pot += added;
+                    if(p.bet > Engine.currBet) Engine.currBet = p.bet;
+                }
+            },
+
+            playerAct: (act) => {
+                if(!Engine.turnP1) return;
+                Engine.actionsOnStreet++; 
+
+                if(act === 'fold') { Engine.p1.folded = true; Engine.endHand('cpu', 'Te retiraste'); return; }
+                if(act === 'check') {
+                    const toCall = Engine.currBet - Engine.p1.bet;
+                    if(toCall > 0) { 
+                         if(Engine.p1.stack <= toCall) { Engine.placeBet('p1', Engine.p1.bet + Engine.p1.stack); UI.bubble('p1', 'ALL IN'); }
+                         else { Engine.placeBet('p1', Engine.currBet); UI.bubble('p1','Pago'); }
+                    } else UI.bubble('p1','Paso');
+                }
+                if(act === 'raise') {
+                    const val = parseInt(UI.$('bet-range').value);
+                    Engine.placeBet('p1', Engine.p1.bet + val); UI.bubble('p1', `Subo a ${Engine.p1.bet}`);
+                }
+                if(act === 'allin') { Engine.placeBet('p1', Engine.p1.bet + Engine.p1.stack); UI.bubble('p1', '¡ALL IN!'); }
+                
+                Engine.turnP1 = false; UI.refresh(); 
+                Engine.processTurn(act === 'raise'); 
+            },
+
+            cpuAI: () => {
+                if(!Engine.active) return;
+                Engine.actionsOnStreet++; 
+
+                const toCall = Engine.currBet - Engine.cpu.bet;
+                const totalCards = [...Engine.cpu.hand, ...Engine.comm];
+                const eval = PokerEvaluator.evaluate(totalCards);
+                let strength = eval.rank * 10; 
+                if(Engine.comm.length === 0) {
+                    const h = Engine.cpu.hand;
+                    if(h[0].val === h[1].val) strength = 40 + h[0].val;
+                    else if(h[0].val > 10 || h[1].val > 10) strength = 20 + h[0].val;
+                    else strength = 5;
+                }
+
+                let action = 'fold';
+                const rnd = Math.random();
+
+                if(toCall === 0) {
+                    if(strength > 20 || rnd > 0.8) action = (strength > 50 && rnd > 0.3) ? 'raise' : 'check';
+                    else action = 'check';
+                } else {
+                    const potOdds = toCall / (Engine.pot + toCall);
+                    if(strength > 60) action = 'raise';
+                    else if(strength > 30) action = 'call';
+                    else if(potOdds < 0.1) action = 'call';
+                    else if(rnd > 0.85) action = 'raise';
+                    else if(rnd > 0.6) action = 'call';
+                    else action = 'fold';
+                }
+
+                if(action === 'fold' && toCall === 0) action = 'check';
+
+                if(action === 'fold') { Engine.cpu.folded = true; UI.bubble('cpu','No voy'); Engine.endHand('p1', 'CPU se retira'); return; }
+                if(action === 'check') UI.bubble('cpu','Paso');
+                if(action === 'call') {
+                    if(Engine.cpu.stack <= toCall) { Engine.placeBet('cpu', Engine.cpu.bet + Engine.cpu.stack); UI.bubble('cpu', 'ALL IN'); }
+                    else { Engine.placeBet('cpu', Engine.currBet); UI.bubble('cpu','Pago'); }
+                }
+                if(action === 'raise') {
+                    const raiseAmt = Math.min(Engine.cpu.stack, Engine.bb * 3);
+                    Engine.placeBet('cpu', Engine.currBet + raiseAmt); UI.bubble('cpu','Subo');
+                }
+                
+                Engine.turnP1 = true; UI.refresh(); 
+                Engine.processTurn(action === 'raise');
+            },
+
+            processTurn: (wasRaise) => {
+                // 1. Si las apuestas no coinciden, turno del otro
+                if(Engine.p1.bet !== Engine.cpu.bet) {
+                     if(!Engine.turnP1) setTimeout(Engine.cpuAI, 1000);
+                     return;
+                }
+                // 2. DETECCIÓN DE ALL-IN (CORREGIDO)
+                if(Engine.p1.stack === 0 || Engine.cpu.stack === 0) {
+                     // IMPORTANTE: Bloquear inmediatamente la interacción para evitar el bucle
+                     Engine.turnP1 = false; 
+                     Engine.active = false; // Detener el estado activo ya
+                     UI.refresh(); // Actualizar botones visualmente (deshabilitarlos)
+                     setTimeout(Engine.runItOut, 1000);
+                     return;
+                }
+                // 3. Si no es All-in, lógica normal de calles
+                if(Engine.actionsOnStreet < 2) {
+                     if(!Engine.turnP1) setTimeout(Engine.cpuAI, 1000);
+                     return;
+                }
+                setTimeout(Engine.nextStage, 600);
+            },
+
+            runItOut: () => {
+                // Asegurar que nadie puede actuar
+                Engine.active = false; 
+                const dealing = setInterval(() => {
+                    if(Engine.stage < 3) {
+                        Engine.stage++;
+                        // Lógica para sacar cartas restantes
+                        const count = Engine.stage === 1 ? 3 : 1;
+                        for(let i=0; i<count; i++) Engine.comm.push(Engine.deck.pop());
+                        UI.updateBoard(Engine.comm);
+                    } else { 
+                        clearInterval(dealing); 
+                        // Ir al Showdown final
+                        setTimeout(Engine.showdown, 1000); 
+                    }
+                }, 800);
+            },
+
+            nextStage: () => {
+                Engine.stage++; 
+                Engine.p1.bet = 0; Engine.cpu.bet = 0; Engine.currBet = 0;
+                Engine.actionsOnStreet = 0; 
+                
+                if(Engine.stage === 1) { for(let i=0; i<3; i++) Engine.comm.push(Engine.deck.pop()); }
+                else if(Engine.stage === 2 || Engine.stage === 3) { Engine.comm.push(Engine.deck.pop()); }
+                else { Engine.showdown(); return; }
+                
+                UI.updateBoard(Engine.comm);
+                Engine.turnP1 = !Engine.dealerP1; 
+                UI.refresh();
+                if(!Engine.turnP1 && Engine.active) setTimeout(Engine.cpuAI, 1500);
+            },
+
+            showdown: () => {
+                Engine.active = false; UI.updateHands(Engine.p1.hand, Engine.cpu.hand, true);
+                const r1 = PokerEvaluator.evaluate([...Engine.p1.hand, ...Engine.comm]);
+                const r2 = PokerEvaluator.evaluate([...Engine.cpu.hand, ...Engine.comm]);
+                const result = PokerEvaluator.compare(r1, r2);
+                if(result === 1) Engine.endHand('p1', `Ganas con ${r1.name}`);
+                else if(result === -1) Engine.endHand('cpu', `CPU gana con ${r2.name}`);
+                else Engine.endHand('tie', `Empate: ${r1.name}`);
+            },
+
+            endHand: (winner, reason) => {
+                Engine.active = false;
+                if(winner === 'p1') { Engine.p1.stack += Engine.pot; UI.toast("¡GANAS!"); UI.log(reason, 'win'); }
+                else if(winner === 'cpu') { Engine.cpu.stack += Engine.pot; UI.toast("PIERDES"); UI.log(reason, 'lose'); }
+                else { Engine.p1.stack += Math.floor(Engine.pot/2); Engine.cpu.stack += Math.floor(Engine.pot/2); UI.toast("EMPATE"); UI.log(reason, 'neu'); }
+                
+                Engine.pot = 0;
+                
+                if(Engine.p1.stack <= 0) { 
+                    Engine.p1.stack = 500; 
+                    UI.toast("¡BANCARROTA!", true); 
+                    UI.log("⚠️ RESCATE: Bono de $500 activado", "bonus");
+                }
+                if(Engine.cpu.stack <= 0) { 
+                    Engine.cpu.stack = 500; 
+                    UI.toast("CPU ELIMINADA", true); 
+                    UI.log("⚠️ CPU Recargada (+500)", "bonus");
+                }
+
+                UI.refresh();
+                UI.$('act-controls').style.display = 'none'; 
+                UI.$('btn-next').style.display = 'block';
+                Engine.dealerP1 = !Engine.dealerP1;
+            }
+        };
+
+        window.onload = Engine.init;
+    </script>
+</body>
+</html>

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Laberinto</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --player-color: #00f2ff; /* Cyan */
+            --exit-color: #39ff14;   /* Verde */
+            --text-color: #ffffff;
+            --font-main: 'Ubuntu', sans-serif;
+            --wall-solid-color: rgba(255, 255, 255, 0.35);
+            
+            /* Colores de botones estilo 'viejo' pero modernos */
+            --btn-reset: #ff5733; 
+            --btn-next: #28a745;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .game-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        h1 {
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.4rem;
+            color: rgba(255,255,255,0.9);
+            letter-spacing: 1px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 10px;
+            font-size: 1rem;
+        }
+
+        .badge {
+            background: rgba(0,0,0,0.4);
+            padding: 5px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            font-weight: 500;
+        }
+
+        /* --- GRID DEL JUEGO --- */
+        #gameArea {
+            display: grid;
+            gap: 0; 
+            background-color: rgba(0,0,0,0.2);
+            padding: 5px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            margin: 0 auto; 
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
+        }
+
+        .cell {
+            width: 100%; 
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- PAREDES REDONDEADAS (Pastillas) --- */
+        .wall-block {
+            width: 85%;
+            height: 85%;
+            background-color: var(--wall-solid-color);
+            border-radius: 30%; /* Borde muy redondeado */
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        /* --- JUGADOR (LATIENDO) --- */
+        .player {
+            background: var(--player-color);
+            border-radius: 50%;
+            width: 75%;
+            height: 75%;
+            /* Animación de latido */
+            animation: pulseBeat 1.5s infinite ease-in-out;
+            box-shadow: 0 0 10px var(--player-color);
+        }
+
+        @keyframes pulseBeat {
+            0% { transform: scale(0.85); box-shadow: 0 0 5px var(--player-color); }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px var(--player-color); }
+            100% { transform: scale(0.85); box-shadow: 0 0 5px var(--player-color); }
+        }
+
+        /* --- SALIDA (GIRANDO) --- */
+        .exit {
+            background: var(--exit-color);
+            width: 70%;
+            height: 70%;
+            border-radius: 30%; /* Ligeramente cuadrada */
+            box-shadow: 0 0 15px var(--exit-color);
+            /* Animación de giro */
+            animation: spinRotate 3s linear infinite;
+        }
+
+        @keyframes spinRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- ZONA DE BOTONES (ESTILO VIEJO/RETRO) --- */
+        .ui-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            width: 100%;
+            justify-content: center;
+            min-height: 45px; /* Para que no salte el diseño */
+        }
+
+        .btn-retro {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: var(--font-main);
+            color: white;
+            border: none;
+            border-radius: 8px; /* Bordes redondeados como pediste */
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s, filter 0.2s;
+        }
+
+        .btn-retro:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 3px rgba(0,0,0,0.3);
+        }
+
+        /* Estilo rojo para Reiniciar */
+        #reiniciar {
+            background-color: var(--btn-reset);
+            background-image: linear-gradient(to bottom, #ff7b5f, #ff5733);
+        }
+
+        /* Estilo verde para Siguiente Nivel */
+        #siguiente {
+            background-color: var(--btn-next);
+            background-image: linear-gradient(to bottom, #4cd16e, #28a745);
+            display: none; /* Oculto por defecto */
+        }
+
+        #message {
+            margin-top: 10px;
+            height: 20px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .win-msg { color: var(--exit-color); }
+        .lose-msg { color: #ff4444; }
+
+        /* --- CONTROLES MÓVIL --- */
+        .controls-area {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            width: 100%;
+        }
+        .dpad-row { display: flex; gap: 15px; }
+        .dpad-btn {
+            width: 55px; height: 55px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white; font-size: 1.5rem;
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+            touch-action: manipulation; user-select: none;
+        }
+        .dpad-btn:active { background: rgba(255, 255, 255, 0.3); }
+
+        @media (min-width: 800px) and (min-height: 600px) {
+            .controls-area { display: none; }
+            .game-container { max-width: 600px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        
+        <div class="header-info">
+            <h1>NEON MAZE</h1>
+            <div class="stats">
+                <div class="badge">Nivel <span id="level">1</span></div>
+                <div class="badge">⏱️ <span id="timer">60</span></div>
+            </div>
+        </div>
+
+        <div id="gameArea"></div>
+        
+        <div id="message"></div>
+
+        <div class="ui-buttons">
+            <button id="reiniciar" class="btn-retro">Reiniciar</button>
+            <button id="siguiente" class="btn-retro">Siguiente Nivel</button>
+        </div>
+
+        <div class="controls-area">
+            <div class="dpad-btn" id="btn-up">▲</div>
+            <div class="dpad-row">
+                <div class="dpad-btn" id="btn-left">◀</div>
+                <div class="dpad-btn" id="btn-right">▶</div>
+            </div>
+            <div class="dpad-btn" id="btn-down">▼</div>
+        </div>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const timerDisplay = document.getElementById('timer');
+        const messageDisplay = document.getElementById('message');
+        const restartBtn = document.getElementById('reiniciar');
+        const nextLevelBtn = document.getElementById('siguiente');
+        const levelDisplay = document.getElementById('level');
+        
+        const cols = 21; 
+        const rows = 21; 
+        
+        let maze = [];
+        let player = { x: 1, y: 1 };
+        let exit = { x: cols - 2, y: rows - 2 };
+        let timeLeft = 60;
+        let timerInterval;
+        let isGameActive = false;
+        let currentLevel = 1;
+
+        function getCellSize() {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const availableWidth = Math.min(screenWidth * 0.85, 550); 
+            const availableHeight = screenHeight * 0.55; 
+            
+            const sizeByWidth = Math.floor(availableWidth / cols);
+            const sizeByHeight = Math.floor(availableHeight / rows);
+            return Math.min(sizeByWidth, sizeByHeight, 30);
+        }
+
+        function generateMaze() {
+            maze = Array.from({ length: rows }, () => Array(cols).fill(1));
+            const stack = [];
+            const startX = 1;
+            const startY = 1;
+            maze[startY][startX] = 0;
+            stack.push({ x: startX, y: startY });
+            const directions = [{ dx: 0, dy: -2 }, { dx: 0, dy: 2 }, { dx: -2, dy: 0 }, { dx: 2, dy: 0 }];
+
+            while (stack.length > 0) {
+                const current = stack[stack.length - 1];
+                const validNeighbors = [];
+                for (let dir of directions) {
+                    const nx = current.x + dir.dx;
+                    const ny = current.y + dir.dy;
+                    if (nx > 0 && nx < cols - 1 && ny > 0 && ny < rows - 1 && maze[ny][nx] === 1) {
+                        validNeighbors.push({ nx, ny, dx: dir.dx, dy: dir.dy });
+                    }
+                }
+                if (validNeighbors.length > 0) {
+                    const chosen = validNeighbors[Math.floor(Math.random() * validNeighbors.length)];
+                    maze[current.y + chosen.dy / 2][current.x + chosen.dx / 2] = 0;
+                    maze[chosen.ny][chosen.nx] = 0;
+                    stack.push({ x: chosen.nx, y: chosen.ny });
+                } else {
+                    stack.pop();
+                }
+            }
+            player = { x: 1, y: 1 };
+            exit = { x: cols - 2, y: rows - 2 };
+            maze[exit.y][exit.x] = 0; 
+        }
+
+        function drawMaze() {
+            const cellSize = getCellSize();
+            gameArea.innerHTML = '';
+            gameArea.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+            gameArea.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
+
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    
+                    if (maze[y][x] === 1) {
+                        const wallBlock = document.createElement('div');
+                        wallBlock.classList.add('wall-block');
+                        cell.appendChild(wallBlock);
+                    }
+                    if (x === player.x && y === player.y) {
+                        const playerDiv = document.createElement('div');
+                        playerDiv.classList.add('player');
+                        cell.appendChild(playerDiv);
+                    }
+                    if (x === exit.x && y === exit.y) {
+                        const exitDiv = document.createElement('div');
+                        exitDiv.classList.add('exit');
+                        cell.appendChild(exitDiv);
+                    }
+                    gameArea.appendChild(cell);
+                }
+            }
+        }
+
+        function movePlayer(dx, dy) {
+            if (!isGameActive) return;
+            const newX = player.x + dx;
+            const newY = player.y + dy;
+
+            if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+                if (maze[newY][newX] === 0) {
+                    player.x = newX;
+                    player.y = newY;
+                    drawMaze();
+                    checkWin();
+                }
+            }
+        }
+
+        function checkWin() {
+            if (player.x === exit.x && player.y === exit.y) {
+                endGame(true);
+            }
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerDisplay.textContent = timeLeft;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                if (timeLeft <= 0) endGame(false);
+            }, 1000);
+        }
+
+        function endGame(win) {
+            isGameActive = false;
+            clearInterval(timerInterval);
+            if (win) {
+                messageDisplay.textContent = "¡NIVEL COMPLETADO!";
+                messageDisplay.className = 'win-msg';
+                // Mostrar botón Siguiente Nivel
+                nextLevelBtn.style.display = 'block';
+                restartBtn.style.display = 'none'; // Ocultar reiniciar momentáneamente para enfocar en siguiente
+            } else {
+                messageDisplay.textContent = "FIN DEL JUEGO";
+                messageDisplay.className = 'lose-msg';
+            }
+        }
+
+        function initGame(resetLevel = false) {
+            if (resetLevel) {
+                currentLevel = 1;
+            }
+            levelDisplay.textContent = currentLevel;
+            
+            clearInterval(timerInterval);
+            messageDisplay.textContent = "";
+            nextLevelBtn.style.display = 'none';
+            restartBtn.style.display = 'block';
+
+            timeLeft = 60 - (currentLevel * 2);
+            if(timeLeft < 15) timeLeft = 15;
+            
+            isGameActive = true;
+            generateMaze();
+            drawMaze();
+            startTimer();
+        }
+
+        // --- Eventos ---
+        document.addEventListener('keydown', (e) => {
+            if(['ArrowUp', 'w', 'W'].includes(e.key)) movePlayer(0, -1);
+            if(['ArrowDown', 's', 'S'].includes(e.key)) movePlayer(0, 1);
+            if(['ArrowLeft', 'a', 'A'].includes(e.key)) movePlayer(-1, 0);
+            if(['ArrowRight', 'd', 'D'].includes(e.key)) movePlayer(1, 0);
+        });
+
+        const setupTouchButton = (id, dx, dy) => {
+            const btn = document.getElementById(id);
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); movePlayer(dx, dy); });
+            btn.addEventListener('mousedown', (e) => { e.preventDefault(); movePlayer(dx, dy); });
+        };
+        setupTouchButton('btn-up', 0, -1);
+        setupTouchButton('btn-down', 0, 1);
+        setupTouchButton('btn-left', -1, 0);
+        setupTouchButton('btn-right', 1, 0);
+
+        // Botón Reiniciar (vuelve al nivel 1)
+        restartBtn.addEventListener('click', () => {
+            initGame(true);
+        });
+
+        // Botón Siguiente Nivel (sube nivel)
+        nextLevelBtn.addEventListener('click', () => {
+            currentLevel++;
+            initGame(false);
+        });
+
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(drawMaze, 200);
+        });
+
+        // Iniciar juego
+        initGame(true);
+
+    </script>
+</body>
+</html>

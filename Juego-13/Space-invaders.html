@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Invaders</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #gameArea {
+            width: 500px;
+            height: 500px;
+            position: relative;
+            background-color: #111;
+            overflow: hidden;
+        }
+
+        .ship {
+            width: 40px;
+            height: 20px;
+            background-color: green;
+            position: absolute;
+            bottom: 10px;
+            left: 230px;
+        }
+
+        .bullet {
+            width: 5px;
+            height: 10px;
+            background-color: red;
+            position: absolute;
+            bottom: 40px;
+        }
+
+        .invader {
+            width: 30px;
+            height: 30px;
+            background-color: blue;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div class="ship" id="ship"></div>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const ship = document.getElementById('ship');
+        let shipPos = { x: 230, y: 470 };
+        let invaders = [];
+        let bullets = [];
+        let invaderDirection = 1;
+        let score = 0;
+
+        // Crear un nuevo disparo
+        function createBullet() {
+            const bullet = document.createElement('div');
+            bullet.classList.add('bullet');
+            bullet.style.left = `${shipPos.x + 15}px`;
+            bullet.style.bottom = `${shipPos.y + 20}px`;
+            gameArea.appendChild(bullet);
+            bullets.push(bullet);
+        }
+
+        // Crear un nuevo alien
+        function createInvader(x, y) {
+            const invader = document.createElement('div');
+            invader.classList.add('invader');
+            invader.style.left = `${x}px`;
+            invader.style.top = `${y}px`;
+            gameArea.appendChild(invader);
+            invaders.push(invader);
+        }
+
+        // Mover los aliens
+        function moveInvaders() {
+            for (let invader of invaders) {
+                const invaderPos = invader.getBoundingClientRect();
+                if (invaderPos.left >= 470 || invaderPos.left <= 0) invaderDirection *= -1;
+                invader.style.top = `${invaderPos.top + 1}px`;
+                invader.style.left = `${invaderPos.left + invaderDirection}px`;
+            }
+        }
+
+        // Mover las balas
+        function moveBullets() {
+            for (let i = 0; i < bullets.length; i++) {
+                const bullet = bullets[i];
+                const bulletPos = bullet.getBoundingClientRect();
+                if (bulletPos.top <= 0) {
+                    bullet.remove();
+                    bullets.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                bullet.style.top = `${bulletPos.top - 5}px`;
+
+                // Verificar si la bala golpea a un alien
+                for (let j = 0; j < invaders.length; j++) {
+                    const invader = invaders[j];
+                    const invaderPos = invader.getBoundingClientRect();
+                    if (
+                        bulletPos.left >= invaderPos.left &&
+                        bulletPos.left <= invaderPos.left + invaderPos.width &&
+                        bulletPos.top <= invaderPos.top + invaderPos.height
+                    ) {
+                        invader.remove();
+                        bullet.remove();
+                        invaders.splice(j, 1);
+                        bullets.splice(i, 1);
+                        score += 10;
+                        i--;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Mover la nave
+        function moveShip(e) {
+            if (e.key === 'ArrowLeft' && shipPos.x > 0) {
+                shipPos.x -= 10;
+            }
+            if (e.key === 'ArrowRight' && shipPos.x < 460) {
+                shipPos.x += 10;
+            }
+            ship.style.left = `${shipPos.x}px`;
+        }
+
+        // Evento de teclas
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ') createBullet();
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') moveShip(e);
+        });
+
+        // Generar los aliens
+        function generateInvaders() {
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    createInvader(i * 60 + 30, j * 40 + 30);
+                }
+            }
+        }
+
+        // Bucle principal del juego
+        function gameLoop() {
+            moveInvaders();
+            moveBullets();
+            requestAnimationFrame(gameLoop);
+        }
+
+        generateInvaders();
+        gameLoop();
+    </script>
+</body>
+</html>

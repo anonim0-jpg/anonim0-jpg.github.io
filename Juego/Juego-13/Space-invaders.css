@@ -1,0 +1,140 @@
+/* --- ESTÉTICA LIQUID GLASS & RETRO --- */
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #16213e 50%, #000000 100%);
+            color: #fff;
+            overflow: hidden;
+            touch-action: none; /* Evita zoom en móviles */
+        }
+
+        /* Panel Principal */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            text-align: center;
+            max-width: 100%;
+            width: 800px;
+            position: relative;
+        }
+
+        h1 {
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            margin: 0 0 10px 0;
+            font-size: 1.8rem;
+            letter-spacing: 3px;
+        }
+
+        /* Canvas Responsivo */
+        canvas {
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+            display: block;
+            margin: 0 auto;
+            max-width: 100%; /* Ajuste móvil */
+            height: auto;
+        }
+
+        /* UI e Información */
+        #ui-container {
+            display: flex;
+            justify-content: space-between;
+            width: 95%;
+            margin: 10px auto;
+            padding: 0 5px;
+        }
+
+        .hud-text {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+            font-weight: bold;
+        }
+
+        #reiniciar {
+            background: rgba(255, 50, 50, 0.2);
+            border: 1px solid #ff3333;
+            color: #ff3333;
+            padding: 8px 20px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        #reiniciar:hover, #reiniciar:active {
+            background: #ff3333;
+            color: white;
+            box-shadow: 0 0 15px #ff3333;
+        }
+
+        /* --- CONTROLES MÓVILES (Touch) --- */
+        .mobile-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 15px;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        .d-pad, .action-btn {
+            display: flex;
+            gap: 15px;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            color: #00ffff;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
+            transition: transform 0.1s;
+        }
+
+        .control-btn:active {
+            background: rgba(0, 255, 255, 0.3);
+            transform: scale(0.95);
+        }
+
+        .fire-btn {
+            border-color: rgba(255, 50, 50, 0.5);
+            color: #ff5050;
+            width: 70px;
+            height: 70px;
+        }
+        
+        .fire-btn:active {
+            background: rgba(255, 50, 50, 0.3);
+        }
+
+        /* Ocultar controles táctiles en pantallas muy grandes si se prefiere, 
+           pero los dejaremos visibles para compatibilidad híbrida */
+        @media (min-width: 1024px) {
+            .mobile-controls { display: none; }
+        }

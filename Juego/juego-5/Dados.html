@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Dados con Apuestas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #333;
+            color: white;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        input {
+            font-size: 16px;
+            padding: 5px;
+            width: 100px;
+            margin-top: 10px;
+        }
+        #result, #score {
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+        #score {
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Juego de Dados con Apuestas</h1>
+    <p>Saldo de Fichas: <span id="fichas">500</span></p>
+    <input type="number" id="apuesta" placeholder="Tu apuesta" min="1" />
+    <button onclick="rollDice()">Lanzar Dados</button>
+    <p id="result"></p>
+    <script src="dado.js"></script>
+</body>
+</html>

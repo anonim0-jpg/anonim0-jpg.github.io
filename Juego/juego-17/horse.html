@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hipódromo Sombrío | 99 Caballos</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;900&display=swap');
+
+        /* --- Configuración Dark Liquid Glass --- */
+        :root {
+            --glass-surface: rgba(0, 0, 0, 0.4); 
+            --glass-border: rgba(255, 255, 255, 0.1);
+            
+            /* Colores de neón */
+            --neon-blue: #00f2ff;
+            --neon-purple: #bd00ff;
+            --neon-green: #0aff68;
+            --neon-red: #ff0055;
+            --neon-yellow: #f9c80e;
+            --neon-orange: #ff6b35;
+
+            --text-main: #ffffff;
+            --text-muted: #aaaaaa;
+        }
+
+        * { box-sizing: border-box; user-select: none; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(-45deg, #000000, #1a0b2e, #0f2027, #203a43);
+            background-size: 400% 400%;
+            animation: gradientBG 20s ease infinite;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-panel {
+            background: var(--glass-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        header {
+            width: 100%; max-width: 1200px; padding: 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 2rem; margin: 0;
+            font-weight: 900; letter-spacing: 1px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #fff, #aaa);
+            background-clip: text; -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .wallet { 
+            font-family: 'Poppins', sans-serif; font-weight: 600;
+            background: rgba(0,0,0,0.6); 
+            padding: 12px 24px; border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .money { color: var(--neon-green); font-weight: 800; text-shadow: 0 0 10px rgba(10, 255, 104, 0.3); }
+
+        /* --- Tabs --- */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border-color: transparent;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+        }
+
+        /* --- Timer --- */
+        .timer-box {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 16px;
+        }
+
+        .timer-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+            color: var(--neon-yellow);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .timer-display {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--neon-green);
+            text-shadow: 0 0 20px rgba(10, 255, 104, 0.4);
+        }
+
+        /* --- Layout --- */
+        .container { 
+            width: 95%; 
+            max-width: 1200px; 
+            padding-bottom: 40px; 
+        }
+
+        /* --- Horse Selection Grid --- */
+        .selection-panel {
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-box input {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .roster {
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            gap: 12px; 
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .roster::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .roster::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+
+        .roster::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+
+        .horse-card {
+            padding: 15px; 
+            cursor: pointer; 
+            transition: transform 0.2s ease, background 0.3s;
+            border-radius: 16px;
+            border: 2px solid transparent;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center;
+            background: rgba(255,255,255,0.03);
+        }
+        
+        .horse-card:hover { 
+            background: rgba(255,255,255,0.08); 
+            transform: translateY(-3px); 
+        }
+        
+        .horse-card.selected {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--neon-yellow);
+            box-shadow: 0 0 20px rgba(249, 200, 14, 0.3);
+            transform: scale(1.05);
+        }
+
+        .card-number {
+            font-size: 1.2rem; 
+            font-weight: 700; 
+            width: 38px; 
+            height: 38px; 
+            line-height: 38px;
+            border-radius: 50%; 
+            background: rgba(0,0,0,0.4);
+            margin-bottom: 8px; 
+            color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        
+        .horse-name { 
+            font-weight: 600; 
+            font-size: 0.75rem; 
+            margin-bottom: 5px; 
+            color: #fff; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px;
+            line-height: 1.2;
+            height: 28px;
+            overflow: hidden;
+        }
+
+        .horse-odds { 
+            font-size: 1.6rem; 
+            font-weight: 800; 
+            color: var(--neon-yellow); 
+            line-height: 1; 
+            margin: 8px 0 5px 0;
+            text-shadow: 0 0 12px rgba(249, 200, 14, 0.2);
+        }
+
+        .payout-hint { 
+            font-size: 0.65rem; 
+            color: var(--text-muted); 
+            font-weight: 500; 
+            text-transform: uppercase;
+        }
+
+        /* --- Controls --- */
+        .controls-area {
+            display: flex; 
+            gap: 15px; 
+            justify-content: center; 
+            align-items: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        input[type="number"] {
+            background: rgba(0,0,0,0.5); 
+            border: 1px solid rgba(255,255,255,0.2); 
+            color: white; 
+            padding: 15px; 
+            border-radius: 12px; 
+            font-size: 1.2rem; 
+            width: 140px; 
+            text-align: center; 
+            font-family: 'Poppins', sans-serif; 
+            font-weight: bold;
+        }
+        input[type="number"]:focus { 
+            outline: none; 
+            border-color: var(--neon-blue); 
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border: none;
+            color: white; 
+            padding: 15px 40px; 
+            border-radius: 12px;
+            font-weight: 700; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: all 0.3s;
+        }
+        .btn-main:hover { 
+            filter: brightness(1.2); 
+            transform: translateY(-2px); 
+        }
+        .btn-main:active { 
+            transform: scale(0.98); 
+        }
+        .btn-main:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed; 
+            filter: grayscale(1); 
+            transform: none; 
+        }
+
+        .bet-limits {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        /* --- Track --- */
+        .track {
+            position: relative; 
+            padding: 15px 0; 
+            background: rgba(0,0,0,0.2);
+        }
+
+        .finish-line {
+            position: absolute; 
+            right: 8%; 
+            top: 0; 
+            bottom: 0; 
+            width: 2px;
+            background: rgba(255,255,255,0.2);
+            border-right: 2px dashed rgba(255,255,255,0.2);
+            z-index: 1;
+        }
+
+        .lane {
+            height: 70px; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+            position: relative;
+            display: flex; 
+            align-items: center; 
+        }
+        
+        .racer-box {
+            position: absolute; 
+            left: 0;
+            width: 50px; 
+            height: 50px;
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            font-weight: 800; 
+            font-size: 1.4rem; 
+            color: #fff;
+            z-index: 5;
+            transition: left 0.1s linear; 
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        .racer-box::after {
+            content: ''; 
+            position: absolute;
+            top: 50%; 
+            left: -20px; 
+            width: 20px; 
+            height: 60%;
+            transform: translateY(-50%);
+            background: inherit;
+            opacity: 0;
+            filter: blur(10px);
+            transition: opacity 0.3s;
+            border-radius: 10px;
+        }
+
+        @keyframes vibration {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-1px, 1px); }
+            40% { transform: translate(1px, -1px); }
+            60% { transform: translate(-1px, -1px); }
+            80% { transform: translate(1px, 1px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .racing {
+            animation: vibration 0.2s infinite linear;
+        }
+        .racing::after { 
+            opacity: 0.5; 
+        }
+
+        /* --- Modal --- */
+        .modal {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(0,0,0,0.85); 
+            backdrop-filter: blur(15px);
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            opacity: 0; 
+            pointer-events: none; 
+            transition: opacity 0.4s; 
+            z-index: 100;
+        }
+        .modal.active { 
+            opacity: 1; 
+            pointer-events: auto; 
+        }
+        .modal-box { 
+            text-align: center; 
+            padding: 50px; 
+            background: rgba(10, 10, 15, 0.95); 
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 60px rgba(0, 242, 255, 0.2); 
+            border-radius: 30px;
+            max-width: 90%;
+            color: #fff;
+        }
+
+        #msg-box {
+            text-align: center; 
+            color: var(--neon-red); 
+            height: 24px; 
+            margin: 10px 0; 
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .roster { 
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+            }
+            h1 { 
+                font-size: 1.5rem; 
+            }
+            .timer-display {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🐎 Hipódromo Sombrío</h1>
+        <div class="wallet">SALDO: <span class="money" id="balance-display">$5000</span></div>
+    </header>
+
+    <div class="container">
+        
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('unique')">EVENTO ÚNICO</button>
+            <button class="tab-btn" onclick="switchTab('main')">EVENTO PRINCIPAL</button>
+        </div>
+
+        <!-- Timer (solo visible en Evento Principal) -->
+        <div class="glass-panel timer-box" id="timer-panel" style="display:none;">
+            <h3>⏱️ Próxima Carrera</h3>
+            <div class="timer-display" id="timer-display">5:00</div>
+        </div>
+
+        <!-- Selection Panel -->
+        <div class="glass-panel selection-panel">
+            <div class="filter-box">
+                <input type="text" id="search-input" placeholder="🔍 Buscar caballo por nombre o número..." onkeyup="filterHorses()">
+            </div>
+
+            <div class="roster" id="roster"></div>
+            
+            <div id="msg-box"></div>
+
+            <div class="controls-area">
+                <input type="number" id="bet-input" value="500" min="100" max="10000" step="100">
+                <button class="btn-main" id="start-btn" onclick="startRace()">APOSTAR</button>
+            </div>
+            <div class="bet-limits">Límites: Mínimo $100 | Máximo $10,000</div>
+        </div>
+
+        <!-- Track -->
+        <div class="glass-panel track" id="track">
+            <div class="finish-line"></div>
+        </div>
+
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-box">
+            <h2 id="modal-title" style="font-size: 2.5rem; margin: 0; font-weight: 800;"></h2>
+            <p id="modal-msg" style="font-size: 1.2rem; margin: 20px 0; opacity: 0.9;"></p>
+            <h3 id="modal-amount" style="font-size: 2.5rem; margin: 0; font-weight: 300;"></h3>
+            <button class="btn-main" onclick="resetGame()" style="margin-top: 30px;">CONTINUAR</button>
+        </div>
+    </div>
+
+    <script>
+        // === 99 NOMBRES DE CABALLOS (estilo oscuro/urbano) ===
+        const HORSE_NAMES = [
+            "Heroína Pasada", "Santo Colocón", "Es una Trampa", "Caballo de Crack", "Sopa de Gallo", 
+            "Coma Etílico", "Riñón Robado", "Ajuste de Cuentas", "Testigo Falso", "Mula de Carga",
+            "Dinero Sucio", "Tétanos", "Señor Agente", "Gatillo Fácil", "Hígado Graso",
+            "Orden de Alejamiento", "Material Robado", "Coartada Perfecta", "Narco Submarino", "Polvo Blanco",
+            "Testaferro", "Blanqueo", "Ruta de la Seda", "Chivato", "Fugitivo",
+            "Contrabando", "Sicario", "Cartel", "Extorsión", "Lavado Express",
+            "Mercado Negro", "Ladrón de Guante Blanco", "Estafa Piramidal", "Deuda Impagable", "Usura",
+            "Rehén", "Secuestro Express", "Rescate", "Mafia", "Padrino",
+            "Venganza Fría", "Traición", "Omertá", "Código de Honor", "Ley del Talión",
+            "Detonador", "Granada", "Kalashnikov", "Cartucho Perdido", "Bala Perdida",
+            "Francotirador", "Punto Muerto", "Crimen Perfecto", "Escena del Crimen", "Forense",
+            "Autopsia", "Morgue", "Féretro", "Lápida", "Cementerio",
+            "Fantasma", "Espectro", "Aparecido", "Resurrección", "Maldición",
+            "Vudú", "Brujería", "Exorcismo", "Demonio", "Pecado Capital",
+            "Infierno", "Purgatorio", "Limbo", "Apocalipsis", "Juicio Final",
+            "Caos", "Anarquía", "Revolución", "Golpe de Estado", "Conspiración",
+            "Illuminati", "Sociedad Secreta", "Pacto Oscuro", "Ritual", "Sacrificio",
+            "Sangre Fría", "Hielo Negro", "Noche Eterna", "Eclipse Total", "Luna Roja",
+            "Sol Negro", "Estrella Caída", "Cometa Mortal", "Agujero Negro", "Vacío Absoluto",
+            "Abismo", "Profundidades", "Fosa Común", "Silencio Eterno", "Último Suspiro",
+            "Aliento Final", "Rigor Mortis", "Putrefacción", "Corrupción Total", "Decadencia"
+        ];
+
+        const COLORS = ["#00f2ff", "#bd00ff", "#0aff68", "#ff0055", "#f9c80e", "#ff6b35"];
+        
+        // === ESTADO GLOBAL ===
+        let balance = 5000;
+        let selectedId = null;
+        let isRacing = false;
+        let currentTab = 'unique'; // 'unique' o 'main'
+        let horses = []; // Todos los 99 caballos
+        let raceHorses = []; // 6 caballos seleccionados para la carrera
+        let raceEntities = [];
+        let mainEventTimer = 300; // 5 minutos en segundos
+        let timerInterval = null;
+        let allHorses = []; // Para filtrado
+
+        // === GENERAR CUOTAS ===
+        function generateOdds(horseIndex) {
+            // Distribución de cuotas de 1/1 a 30/1
+            // Los primeros caballos tienen cuotas bajas (favoritos)
+            // Los últimos tienen cuotas altas (outsiders)
+            
+            let oddsNum;
+            if (horseIndex < 10) {
+                oddsNum = 1; // EVS (1/1)
+            } else if (horseIndex < 20) {
+                oddsNum = 2; // 2/1
+            } else if (horseIndex < 30) {
+                oddsNum = 3; // 3/1
+            } else if (horseIndex < 40) {
+                oddsNum = 4; // 4/1
+            } else if (horseIndex < 50) {
+                oddsNum = 5; // 5/1
+            } else if (horseIndex < 60) {
+                oddsNum = 8; // 8/1
+            } else if (horseIndex < 70) {
+                oddsNum = 10; // 10/1
+            } else if (horseIndex < 80) {
+                oddsNum = 15; // 15/1
+            } else if (horseIndex < 90) {
+                oddsNum = 20; // 20/1
+            } else {
+                oddsNum = 30; // 30/1
+            }
+
+            const oddsDen = 1;
+            const oddsStr = oddsNum === 1 ? "EVS" : `${oddsNum}/1`;
+            
+            return { n: oddsNum, d: oddsDen, str: oddsStr };
+        }
+
+        // === INICIALIZAR ===
+        function init() {
+            // Crear los 99 caballos
+            horses = [];
+            for(let i = 0; i < 99; i++) {
+                const odds = generateOdds(i);
+                // Calcular stats basado en cuotas (inversamente proporcional)
+                const baseScore = 30 - odds.n;
+                const spd = Math.max(1, Math.min(10, baseScore + Math.floor(Math.random() * 3)));
+                const acc = Math.max(1, Math.min(10, baseScore + Math.floor(Math.random() * 3)));
+                const sta = Math.max(1, Math.min(10, baseScore + Math.floor(Math.random() * 3)));
+                
+                horses.push({
+                    id: i,
+                    number: i + 1,
+                    name: HORSE_NAMES[i],
+                    color: COLORS[i % COLORS.length],
+                    odds: odds,
+                    stats: { spd, acc, sta }
+                });
+            }
+            
+            allHorses = [...horses];
+            selectedId = null;
+            selectRandomHorses();
+            renderUI();
+            updateTrack();
+            
+            // Iniciar timer si estamos en evento principal
+            if(currentTab === 'main') {
+                startMainEventTimer();
+            }
+        }
+
+        // === SELECCIONAR 6 CABALLOS ALEATORIOS PARA LA CARRERA ===
+        function selectRandomHorses() {
+            const shuffled = [...horses].sort(() => 0.5 - Math.random());
+            raceHorses = shuffled.slice(0, 6);
+        }
+
+        // === CAMBIAR TAB ===
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Actualizar botones
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Mostrar/ocultar timer
+            if(tab === 'main') {
+                document.getElementById('timer-panel').style.display = 'block';
+                startMainEventTimer();
+            } else {
+                document.getElementById('timer-panel').style.display = 'none';
+                if(timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+            }
+            
+            // Reset selección
+            selectedId = null;
+            if(tab === 'unique') {
+                selectRandomHorses(); // Nueva selección aleatoria
+            }
+            renderUI();
+            updateTrack();
+        }
+
+        // === TIMER EVENTO PRINCIPAL ===
+        function startMainEventTimer() {
+            if(timerInterval) clearInterval(timerInterval);
+            
+            mainEventTimer = 300; // 5 minutos
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                mainEventTimer--;
+                updateTimerDisplay();
+                
+                if(mainEventTimer <= 0) {
+                    // Nueva carrera automática
+                    mainEventTimer = 300;
+                    selectRandomHorses();
+                    selectedId = null;
+                    renderUI();
+                    updateTrack();
+                    msg("¡Nueva carrera disponible!");
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(mainEventTimer / 60);
+            const secs = mainEventTimer % 60;
+            document.getElementById('timer-display').innerText = 
+                `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // === FILTRAR CABALLOS ===
+        function filterHorses() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            
+            if(searchTerm === '') {
+                renderUI();
+                return;
+            }
+            
+            const filtered = raceHorses.filter(h => 
+                h.name.toLowerCase().includes(searchTerm) || 
+                h.number.toString().includes(searchTerm)
+            );
+            
+            renderUI(filtered);
+        }
+
+        // === RENDERIZAR UI ===
+        function renderUI(horsesToShow = null) {
+            const list = document.getElementById('roster');
+            list.innerHTML = '';
+            
+            const displayHorses = horsesToShow || raceHorses;
+            
+            displayHorses.forEach(h => {
+                const div = document.createElement('div');
+                div.className = `horse-card ${selectedId === h.id ? 'selected' : ''}`;
+                div.onclick = () => { 
+                    if(!isRacing) { 
+                        selectedId = h.id; 
+                        renderUI(horsesToShow); 
+                        msg(''); 
+                    }
+                };
+                
+                div.innerHTML = `
+                    <div class="card-number" style="color:${h.color}; border-color:${h.color};">${h.number}</div>
+                    <div class="horse-name">${h.name}</div>
+                    <div class="horse-odds">${h.odds.str}</div>
+                    <div class="payout-hint">PAGA x${(1 + h.odds.n/h.odds.d).toFixed(2)}</div>
+                `;
+                list.appendChild(div);
+            });
+            
+            document.getElementById('balance-display').innerText = '$' + balance;
+        }
+
+        // === ACTUALIZAR PISTA ===
+        function updateTrack() {
+            const track = document.getElementById('track');
+            track.innerHTML = '<div class="finish-line"></div>';
+            
+            raceHorses.forEach((h) => {
+                const lane = document.createElement('div');
+                lane.className = 'lane';
+                lane.innerHTML = `
+                    <div class="racer-box" id="racer-${h.id}" style="border-color:${h.color}; color:${h.color};">
+                        ${h.number}
+                    </div>
+                `;
+                track.appendChild(lane);
+            });
+        }
+
+        // === INICIAR CARRERA ===
+        function startRace() {
+            if(selectedId === null) return msg("¡ELIGE UN CABALLO!");
+            
+            let bet = parseInt(document.getElementById('bet-input').value);
+            
+            // Validación de límites
+            if(isNaN(bet) || bet < 100) return msg("APUESTA MÍNIMA: $100");
+            if(bet > 10000) return msg("APUESTA MÁXIMA: $10,000");
+            if(bet > balance) return msg("SALDO INSUFICIENTE");
+
+            balance -= bet;
+            isRacing = true;
+            msg("");
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('bet-input').disabled = true;
+            document.getElementById('balance-display').innerText = '$' + balance;
+
+            // Activar animación
+            raceHorses.forEach(h => {
+                const el = document.getElementById(`racer-${h.id}`);
+                if(el) {
+                    el.classList.add('racing');
+                    el.style.animationDelay = `-${Math.random()}s`;
+                }
+            });
+
+            // Inicializar entidades de carrera
+            raceEntities = raceHorses.map(h => ({
+                id: h.id,
+                obj: h,
+                pos: 0,
+                speedCurrent: 0,
+                speedMax: 0.3 + (h.stats.spd * 0.035), 
+                accel: 0.005 + (h.stats.acc * 0.002),
+                stamina: 100 + (h.stats.sta * 10),
+                finished: false
+            }));
+
+            requestAnimationFrame(loop);
+        }
+
+        // === LOOP DE CARRERA ===
+        function loop() {
+            let finishedCount = 0;
+            let winner = null;
+
+            raceEntities.forEach(e => {
+                if(e.finished) { 
+                    finishedCount++; 
+                    return; 
+                }
+
+                // Física
+                e.stamina -= 0.5;
+                let chaos = (Math.random() - 0.48) * 0.06;
+
+                if(e.stamina > 0) {
+                    if(e.speedCurrent < e.speedMax) e.speedCurrent += e.accel;
+                    e.pos += e.speedCurrent + chaos;
+                } else {
+                    e.speedCurrent *= 0.98;
+                    e.pos += e.speedCurrent;
+                }
+
+                // Actualizar posición
+                const el = document.getElementById(`racer-${e.id}`);
+                if(el) {
+                    el.style.left = Math.min(90, e.pos) + '%';
+                }
+
+                if(e.pos >= 90) {
+                    e.finished = true;
+                    if(el) el.classList.remove('racing');
+                    if(!winner && finishedCount === 0) winner = e;
+                }
+            });
+
+            if(winner) {
+                endGame(winner);
+            } else {
+                requestAnimationFrame(loop);
+            }
+        }
+
+        // === TERMINAR JUEGO ===
+        function endGame(w) {
+            isRacing = false;
+            let bet = parseInt(document.getElementById('bet-input').value);
+            let winAmount = 0;
+
+            const modal = document.getElementById('modal');
+            const mTitle = document.getElementById('modal-title');
+            const mMsg = document.getElementById('modal-msg');
+            const mAmnt = document.getElementById('modal-amount');
+
+            if(w.id === selectedId) {
+                let profit = Math.floor(bet * (w.obj.odds.n / w.obj.odds.d));
+                winAmount = bet + profit;
+                balance += winAmount;
+
+                mTitle.innerText = "¡VICTORIA!";
+                mTitle.style.color = "var(--neon-green)"; 
+                mMsg.innerHTML = `¡El <b>#${w.obj.number}</b> (<span style="color:${w.obj.color}">${w.obj.name}</span>) ganó!`;
+                mAmnt.innerText = `+ $${winAmount}`;
+                mAmnt.style.color = "var(--neon-green)";
+            } else {
+                mTitle.innerText = "DERROTA";
+                mTitle.style.color = "var(--neon-red)";
+                mMsg.innerHTML = `Ganó el <b>#${w.obj.number}</b> (<span style="color:${w.obj.color}">${w.obj.name}</span>).`;
+                mAmnt.innerText = `-$${bet}`;
+                mAmnt.style.color = "var(--neon-red)";
+            }
+
+            setTimeout(() => modal.classList.add('active'), 500);
+        }
+
+        // === RESETEAR JUEGO ===
+        function resetGame() {
+            document.getElementById('modal').classList.remove('active');
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('bet-input').disabled = false;
+            
+            // En evento único, generar nueva carrera
+            if(currentTab === 'unique') {
+                selectRandomHorses();
+            }
+            
+            selectedId = null;
+            renderUI();
+            updateTrack();
+        }
+
+        // === MENSAJE ===
+        function msg(t) { 
+            document.getElementById('msg-box').innerText = t; 
+        }
+
+        // === INICIAR ===
+        init();
+
+    </script>
+</body>
+</html>

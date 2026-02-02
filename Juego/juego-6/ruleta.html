@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diamond Casino & Resort</title>
+    <link rel="stylesheet" href="ruleta.css">
+</head>
+<body>
+
+    <div class="diamond-ui">
+        <div class="top-bar">
+            <div class="stat-box">
+                <span class="label">TU SALDO</span>
+                <span id="wallet-display" class="value">$1,000</span>
+            </div>
+            <div class="logo-area">
+                <h1>DIAMOND <span class="thin">CASINO</span></h1>
+            </div>
+            <div class="stat-box">
+                <span class="label">APUESTA TOTAL</span>
+                <span id="current-bet-display" class="value">$0</span>
+            </div>
+        </div>
+
+        <div class="game-floor">
+            
+            <div class="wheel-zone">
+                <div class="wheel-base">
+                    <div id="wheel" class="wheel-spinner"></div>
+                    <div id="ball-container" class="ball-container">
+                        <div id="ball" class="ball"></div>
+                    </div>
+                    <div class="center-cap"></div>
+                </div>
+                <button id="spin-btn" class="gta-btn" onclick="spin()">GIRAR RULETA</button>
+            </div>
+
+            <div class="betting-table-container">
+                
+                <div class="chip-controls">
+                    <button class="nav-btn" onclick="changeChip(-1)">➖</button>
+                    <div id="chip-preview" class="chip-display">
+                        <span id="chip-val">100</span>
+                    </div>
+                    <button class="nav-btn" onclick="changeChip(1)">➕</button>
+                    <button class="clear-btn" onclick="clearBets()">LIMPIAR MESA</button>
+                </div>
+
+                <div class="main-board">
+                    
+                    <div class="zeros-area">
+                        <div class="cell zero-cell" onclick="placeBet('0')">0</div>
+                        <div class="cell zero-cell" onclick="placeBet('00')">00</div>
+                    </div>
+
+                    <div id="numbers-grid" class="numbers-area"></div>
+
+                    <div class="rows-area">
+                        <div class="cell row-cell" onclick="placeBet('row3')">2 to 1</div>
+                        <div class="cell row-cell" onclick="placeBet('row2')">2 to 1</div>
+                        <div class="cell row-cell" onclick="placeBet('row1')">2 to 1</div>
+                    </div>
+                </div>
+
+                <div class="bottom-board">
+                    <div class="dozens-row">
+                        <div class="cell ext-cell" onclick="placeBet('1st12')">1st 12</div>
+                        <div class="cell ext-cell" onclick="placeBet('2nd12')">2nd 12</div>
+                        <div class="cell ext-cell" onclick="placeBet('3rd12')">3rd 12</div>
+                    </div>
+                    <div class="simple-row">
+                        <div class="cell ext-cell" onclick="placeBet('1-18')">1-18</div>
+                        <div class="cell ext-cell" onclick="placeBet('even')">PAR</div>
+                        <div class="cell ext-cell red-bg" onclick="placeBet('red')">ROJO</div>
+                        <div class="cell ext-cell black-bg" onclick="placeBet('black')">NEGRO</div>
+                        <div class="cell ext-cell" onclick="placeBet('odd')">IMPAR</div>
+                        <div class="cell ext-cell" onclick="placeBet('19-36')">19-36</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="overlay" class="overlay hidden">
+            <div class="modal-gta">
+                <h2 id="res-title">GANADOR</h2>
+                <div id="res-number" class="big-number">--</div>
+                <p id="res-text">--</p>
+                <button class="gta-btn small" onclick="closeOverlay()">CERRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="ruleta.js"></script>
+</body>
+</html>

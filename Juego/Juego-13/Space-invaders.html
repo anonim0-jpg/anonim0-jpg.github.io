@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Space Invaders - Liquid Glass Mobile</title>
+    <link rel="stylesheet" href="Space-invaders.css">
+</head>
+<body>
+
+    <div class="glass-panel">
+        <h1>Space-invaders</h1>
+        
+        <canvas id="gameCanvas" width="800" height="500" tabindex="0"></canvas>
+        
+        <div id="ui-container">
+            <span id="score" class="hud-text">SCORE: 0</span>
+            <span id="level-display" class="hud-text" style="color: #ffff00;">LVL: 1</span>
+        </div>
+
+        <button id="reiniciar">INICIAR MISIÓN</button>
+
+        <div class="mobile-controls">
+            <div class="d-pad">
+                <div class="control-btn" id="btn-left">◄</div>
+                <div class="control-btn" id="btn-right">►</div>
+            </div>
+            <div class="action-btn">
+                <div class="control-btn fire-btn" id="btn-fire">●</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="Space-invaders.js"></script>
+</body>
+</html>
